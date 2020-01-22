@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import Vuex, { Store } from 'vuex'
+import ClassyVuex from '../src'
 import { state, mutation, action, createStore, getset } from '../src'
 
 Vue.use(Vuex)
+Vue.use(ClassyVuex, { Store })
 
 export interface TestState {
     value: number
@@ -34,7 +36,7 @@ export class Test implements TestState {
     }
 }
 
-export const getStore = () => createStore<TestState, Test>(Store, Test)
+export const getStore = () => createStore<TestState, Test>(Test)
 
 export function wait(time: number) {
     return new Promise(resolve => {

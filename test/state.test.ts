@@ -33,7 +33,7 @@ class Foo implements FooWithSubState {
 describe('state.ts', () => {
     let store: Store<FooWithSubState>
     beforeEach(() => {
-        store = createStore<FooWithSubState, Foo>(Store, Foo)
+        store = createStore<FooWithSubState, Foo>(Foo)
     })
     test('test class to module mapping', () => {
         expect(store.state.value).toBe(I_VAL)

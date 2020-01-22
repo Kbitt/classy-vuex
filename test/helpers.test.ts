@@ -49,7 +49,7 @@ describe('helpers.ts', () => {
     let mapped: Record<keyof Test, Cpu>
 
     beforeEach(() => {
-        store = createStore<TestState, Test>(Store, Test)
+        store = createStore<TestState, Test>(Test)
         const context = ({
             $store: store,
             mapModule,

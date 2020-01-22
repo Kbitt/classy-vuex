@@ -118,12 +118,19 @@ export function classModule<S extends {} = any>(ctor: {
     }
 }
 
+export type StoreConstructor<S> = { new (options: StoreOptions<S>): Store<S> }
+
+let _storeCtor: StoreConstructor<any>
+
+export const setStoreConstructor = (storeCtor: StoreConstructor<any>) => {
+    _storeCtor = storeCtor
+}
+
 export function createStore<S extends {}, T extends S>(
-    storeCtor: { new (options: StoreOptions<S>): Store<S> },
     ctor: T | ModuleCtor<T> | (() => T),
     ...args: any[]
 ): Store<S> {
-    const superClass = classModule(storeCtor)
+    const superClass = classModule(_storeCtor)
     const options = isNewable(ctor) ? new ctor(...args) : ctor
     return new superClass(createClassModule(() => options))
 }

@@ -30,7 +30,7 @@ describe('mutation.ts', () => {
     let store: Store<TestState>
     let mod: Test
     beforeEach(() => {
-        store = createStore<TestState, Test>(Store, Test)
+        store = createStore<TestState, Test>(Test)
         mod = getModuleAs(Test, store)
     })
 

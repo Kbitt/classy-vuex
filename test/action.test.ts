@@ -74,7 +74,7 @@ describe('action.ts', () => {
     let mod: Test
 
     beforeEach(() => {
-        store = createStore<TestState, Test>(Store, Test)
+        store = createStore<TestState, Test>(Test)
         mod = getModuleAs(Test, store)
     })
 
