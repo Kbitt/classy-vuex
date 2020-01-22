@@ -1,0 +1,49 @@
+{
+    "name": "classy-vuex",
+    "version": "0.1.0.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist/*",
+        "LICENSE"
+    ],
+    "license": "MIT",
+    "devDependencies": {
+        "@babel/cli": "^7.8.3",
+        "@babel/core": "^7.8.3",
+        "@babel/plugin-proposal-class-properties": "^7.8.3",
+        "@babel/plugin-proposal-decorators": "^7.8.3",
+        "@babel/preset-env": "^7.8.3",
+        "@babel/preset-typescript": "^7.8.3",
+        "@types/jest": "^24.0.25",
+        "@types/lodash-es": "^4.17.3",
+        "@types/node": "^13.1.7",
+        "@types/webpack": "^4.41.2",
+        "babel-loader": "^8.0.6",
+        "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+        "clean-webpack-plugin": "^3.0.0",
+        "cross-env": "^6.0.3",
+        "jest": "^24.9.0",
+        "lodash-es": "^4.17.15",
+        "prettier": "^1.19.1",
+        "reflect-metadata": "^0.1.13",
+        "semver": "^7.1.1",
+        "ts-jest": "^24.3.0",
+        "typescript": "^3.7.4",
+        "vue": "^2.6.11",
+        "vuex": "^3.1.2",
+        "webpack": "^4.41.5",
+        "webpack-cli": "^3.3.10"
+    },
+    "scripts": {
+        "test": "jest",
+        "build": "webpack",
+        "build-prod": "cross-env NODE_ENV=production webpack",
+        "build-declarations": "tsc --emitDeclarationOnly",
+        "build-all": "yarn build && yarn build-declarations",
+        "build-all-prod": "yarn build-prod && yarn build-declarations",
+        "start": "yarn build-declarations && yarn build --watch",
+        "lint": "prettier --check --config ./.prettierrc.js \"+(src|test)/*.ts\"",
+        "lint-fix": "prettier --write --config ./.prettierrc.js \"+(src|test)/*.ts\""
+    }
+}
