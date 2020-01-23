@@ -12,7 +12,6 @@ module.exports = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     entry: {
         index: r('src/index.ts'),
-        util: r('src/util.ts'),
     },
     output: {
         libraryTarget: 'commonjs',
