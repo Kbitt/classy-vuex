@@ -1,10 +1,15 @@
 import { Module, StoreOptions, Store } from 'vuex'
-import { setStoreOptionMetadata, isNewable } from './reflect'
+import {
+    setStoreOptionMetadata,
+    isNewable,
+    getInstanceMetadata,
+    ROOT_NS_KEY,
+} from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
 import { getActions } from './action'
 import { getStates } from './state'
-import { createClassModule, VuexClassModule } from './base'
+import { createClassModule } from './base'
 import { getGetSets } from './getset'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
@@ -132,7 +137,7 @@ export function createStore<S extends {}, T extends S>(
 ): Store<S> {
     const superClass = classModule(_storeCtor)
     const options = isNewable(ctor) ? new ctor(...args) : ctor
-    return new superClass(createClassModule(() => options))
+    return new superClass(createClassModule(() => options) as StoreOptions<S>)
 }
 
 const getState = <S>(
@@ -151,13 +156,14 @@ const getState = <S>(
 const getPathedFn = (name: string, namespace: string | undefined = undefined) =>
     namespace ? `${namespace}/${name}` : name
 
-export function getModuleAs<T, S, R = any>(
+export function getModuleAs<T, S>(
     ctor: { new (): T },
     store: Store<S>,
     namespace: string | undefined = undefined
-): VuexClassModule<T, S, R> {
+): T {
     const optionsPrototype = ctor.prototype
-    const instance = new ctor()
+    const instanceMap = getInstanceMetadata(store)
+    const instance = instanceMap[namespace || ROOT_NS_KEY].instance as T
     const anyInstance = instance as any
     const state = getState(store, namespace)
 
@@ -199,5 +205,5 @@ export function getModuleAs<T, S, R = any>(
         }
     })
 
-    return instance as VuexClassModule<T, S, R>
+    return instance as T
 }

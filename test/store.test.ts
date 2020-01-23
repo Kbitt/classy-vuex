@@ -56,7 +56,7 @@ describe('state.ts', () => {
     let store: Store<TestState>
     beforeEach(() => {
         options = new Test()
-        store = createStore<TestState, Test>(options)
+        store = createStore(options)
     })
     test('get store from metadata', () => {
         const optionsAgain = getOptionsFromStore(store)

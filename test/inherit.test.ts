@@ -1,6 +1,6 @@
 import './_init'
-import { Module, Store, StoreOptions } from 'vuex'
-import { mutation, getModuleAs, getter, action } from '../src'
+import { Store, StoreOptions } from 'vuex'
+import { mutation, getModuleAs, getter, action, createStore } from '../src'
 import { state } from '../src/state'
 
 interface BaseModuleState {
@@ -59,6 +59,8 @@ interface RootState {
 
 class Root implements StoreOptions<RootState> {
     strict = true
+    base!: BaseModule
+    sub!: SubModule
     modules = {
         base: new BaseModule(),
         sub: new SubModule(),
@@ -68,10 +70,10 @@ class Root implements StoreOptions<RootState> {
 const A_2 = 'set a value'
 const B_2 = 'set b value'
 
-describe('', () => {
+describe('test module inheritance', () => {
     let store: Store<RootState>
     beforeEach(() => {
-        store = new Store<RootState>(new Root())
+        store = createStore(Root)
     })
     test('test inherited module', () => {
         expect(store.state.base.a).toBe(INIT_A)

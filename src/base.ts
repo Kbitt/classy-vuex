@@ -1,12 +1,10 @@
-import { Module } from 'vuex'
 import { isNewable } from './reflect'
-export type VuexClassModule<T, S, R = any> = T & S & Module<S, R>
 
-export function createClassModule<T extends object, S, R = any>(
+export function createClassModule<T>(
     instanceOrFactory: T | { new (): T } | { (): T }
-): VuexClassModule<T, R, S> {
+): T {
     const instance = isNewable(instanceOrFactory)
         ? new instanceOrFactory()
         : instanceOrFactory
-    return instance as VuexClassModule<T, R, S>
+    return instance as T
 }

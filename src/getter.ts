@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { addToMetadataCollection } from './reflect'
+import { addToMetadataCollection, recordModule } from './reflect'
 import { defineGetter } from './define'
 const GETTERS = Symbol('GETTERS')
 
@@ -30,6 +30,7 @@ export function getter(
         name: propertyKey,
         isGetter: !!descriptor.get,
     }
+    recordModule(target)
     addToMetadataCollection(GETTERS, target, metadata)
     defineGetter(target, propertyKey, descriptor)
 }

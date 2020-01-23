@@ -1,4 +1,4 @@
-import { addToMetadataCollection } from './reflect'
+import { addToMetadataCollection, recordModule } from './reflect'
 import { defineState } from './define'
 
 const STATES = Symbol('STATES')
@@ -13,8 +13,9 @@ const STATES = Symbol('STATES')
  * }
  */
 export function state<T>(initialValue: T) {
-    return function getter(target: any, propertyKey: string) {
+    return function(target: any, propertyKey: string) {
         addToMetadataCollection(STATES, target, propertyKey)
+        recordModule(target)
         defineState(initialValue, target, propertyKey)
     }
 }

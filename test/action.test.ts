@@ -1,6 +1,6 @@
 import './_init'
 import { mutation } from '../src/mutation'
-import { Store } from 'vuex'
+import { Store, Module } from 'vuex'
 import { action } from '../src/action'
 import { getter } from '../src/getter'
 import { createStore, getModuleAs, getset } from '../src'
@@ -15,7 +15,8 @@ interface TestState {
 
 const randomNumber = Math.floor(Math.random() * 1000)
 
-class Test implements TestState {
+class Test implements TestState, Module<TestState, any> {
+    state!: TestState
     @state(0)
     value!: number
 
@@ -74,7 +75,7 @@ describe('action.ts', () => {
     let mod: Test
 
     beforeEach(() => {
-        store = createStore<TestState, Test>(Test)
+        store = createStore(Test)
         mod = getModuleAs(Test, store)
     })
 

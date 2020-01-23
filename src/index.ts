@@ -1,17 +1,11 @@
-export * from './action'
-export * from './getter'
-export * from './getset'
-export * from './mutation'
-import {
-    getModuleAs,
-    setStoreConstructor,
-    classModule,
-    createStore,
-    StoreConstructor,
-} from './store'
-export { getModuleAs, classModule, createStore }
+export { action } from './action'
+export { getter } from './getter'
+export { getset } from './getset'
+export { mutation } from './mutation'
+import { setStoreConstructor, StoreConstructor } from './store'
+export { getModuleAs, classModule, createStore } from './store'
 export * from './helpers'
-export * from './state'
+export { state } from './state'
 
 export type ClassyVuexPluginOptions = {
     Store: StoreConstructor<any>

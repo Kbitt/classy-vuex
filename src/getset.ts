@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { addToMetadataCollection } from './reflect'
+import { addToMetadataCollection, recordModule } from './reflect'
 import { defineMutation, defineState } from './define'
 const GETSETS = Symbol('GETSETS')
 
@@ -15,6 +15,7 @@ export function getset<T>(
     mutationName: string | undefined = undefined
 ) {
     return function(target: any, propertyKey: string) {
+        recordModule(target)
         const mut = mutationName || getMutationName(propertyKey)
         const data: GetSetMetadata = {
             initialValue,

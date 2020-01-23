@@ -1,20 +1,41 @@
-import { Store, Module } from 'vuex'
+import { Store, Module, StoreOptions } from 'vuex'
 
-export function addToMetadataCollection(key: any, target: any, value: any) {
+function addToMetadataMap(
+    metadataKey: any,
+    target: any,
+    key: string | number | symbol,
+    value: any
+) {
+    let map = Reflect.getOwnMetadata(metadataKey, target)
+    if (!map) {
+        map = Reflect.hasMetadata(metadataKey, target)
+            ? Reflect.getMetadata(metadataKey, target).slice(0)
+            : {}
+        Reflect.defineMetadata(metadataKey, map, target)
+    }
+
+    map[key] = value
+}
+
+export function addToMetadataCollection(
+    metadataKey: any,
+    target: any,
+    value: any
+) {
     // get own fields from the target
-    let mutations = Reflect.getOwnMetadata(key, target)
-    if (!mutations) {
+    let data = Reflect.getOwnMetadata(metadataKey, target)
+    if (!data) {
         // merge with inherited fields, if available.
-        mutations = Reflect.hasMetadata(key, target)
-            ? Reflect.getMetadata(key, target).slice(0)
+        data = Reflect.hasMetadata(metadataKey, target)
+            ? Reflect.getMetadata(metadataKey, target).slice(0)
             : []
 
         // define own fields on the target
-        Reflect.defineMetadata(key, mutations, target)
+        Reflect.defineMetadata(metadataKey, data, target)
     }
 
     // record the property as a mutation
-    mutations.push(value)
+    data.push(value)
 }
 
 /** Symbol for key to store options prototype as metadata of store */
@@ -26,15 +47,51 @@ const STORE_OPTIONS = Symbol('STORE_OPTIONS')
 /** Symbol for key to store store as metadata of options */
 const OPTIONS_STORE = Symbol('OPTIONS_STORE')
 
+const MODULE = Symbol('MODULE')
+
+export function recordModule(target: any) {
+    Reflect.defineMetadata(MODULE, true, target)
+}
+
+export function isModule(target: any) {
+    return Reflect.getMetadata(MODULE, target) === true
+}
+
+const OPTIONS_INSTANCE = Symbol('OPTIONS_INSTANCE')
+type InstanceMetadata = { instance: any; path: string | null }
+
+export const ROOT_NS_KEY = '<root>'
+
+function setInstanceMetadata(
+    store: Store<any>,
+    options: Module<any, any>,
+    path: string | null
+) {
+    const metadata: InstanceMetadata = { instance: options, path }
+    addToMetadataMap(OPTIONS_INSTANCE, store, path || ROOT_NS_KEY, metadata)
+    if (options.modules && Object.keys(options.modules).length) {
+        Object.entries(options.modules).forEach(([key, value]) => {
+            setInstanceMetadata(store, value, path ? path + '/' + key : key)
+        })
+    }
+}
+
+export function getInstanceMetadata(
+    store: Store<any>
+): Record<string, InstanceMetadata> {
+    return Reflect.getOwnMetadata(OPTIONS_INSTANCE, store) || {}
+}
+
 export function setStoreOptionMetadata<S>(
     store: Store<S>,
-    options: Module<S, any>
+    options: StoreOptions<S>
 ) {
     const optionsPrototype = (options as any).constructor.prototype
     Reflect.defineMetadata(STORE_OPTIONS_PROTO, optionsPrototype, store)
     Reflect.defineMetadata(STORE_OPTIONS, options, store)
     Reflect.defineMetadata(OPTIONS_PROTO_STORE, store, optionsPrototype)
     Reflect.defineMetadata(OPTIONS_STORE, store, options)
+    setInstanceMetadata(store, options, null)
 }
 
 const mergeMetadata = (key: any, value: any, target: any) => {
