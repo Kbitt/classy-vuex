@@ -157,7 +157,7 @@ const getPathedFn = (name: string, namespace: string | undefined = undefined) =>
     namespace ? `${namespace}/${name}` : name
 
 export function getModuleAs<T, S>(
-    ctor: { new (): T },
+    ctor: { new (...args: any[]): T },
     store: Store<S>,
     namespace: string | undefined = undefined
 ): T {
