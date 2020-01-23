@@ -23,7 +23,7 @@ export function mapModule<T>(
 
     keys.forEach(key => {
         Object.defineProperty(result, key, {
-            get: () => classModule[key],
+            get: () => classModule[key as keyof typeof classModule],
         })
     })
 
