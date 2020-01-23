@@ -4,15 +4,12 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    working-directory: ../..
     steps:
     - uses: borales/actions-yarn@v2.0.0
-      working-directory: ../..
       with:
         cmd: install # will run `yarn install` command
     - uses: borales/actions-yarn@v2.0.0
-      working-directory: ../..
       with:
         cmd: test # will run `yarn test` command
