@@ -79,7 +79,7 @@ describe('action.ts', () => {
         mod = getModuleAs(Test, store)
     })
 
-    test('action works', async () => {
+    test('action-1 action works', async () => {
         await store.dispatch('foo')
         expect(store.state.value).toBe(10)
     })

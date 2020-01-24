@@ -85,6 +85,6 @@ describe('state.ts', () => {
     })
 
     test('test unnamespaced getter does not work', () => {
-        expect(store.getters['foo/getSomething']).toBe('whatever20202')
+        expect(store.getters['foo/inner/getSomething']).toBe('whatever20202')
     })
 })

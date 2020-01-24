@@ -1,4 +1,4 @@
-import { addToMetadataCollection, recordModule } from './reflect'
+import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 import { defineState } from './define'
 
 const STATES = Symbol('STATES')
@@ -16,6 +16,7 @@ export function state<T>(initialValue: T) {
     return function(target: any, propertyKey: string) {
         addToMetadataCollection(STATES, target, propertyKey)
         recordModule(target)
+        recordVuexKey(target, propertyKey)
         defineState(initialValue, target, propertyKey)
     }
 }

@@ -42,4 +42,14 @@ describe('properties', () => {
     it('can call an action', () => {
         expect(test.callsAction() instanceof Promise).toBe(true)
     })
+
+    it('repeat caching works', () => {
+        let works = true
+        try {
+            test = getModuleAs(Test, store)
+        } catch (_) {
+            works = false
+        }
+        expect(works).toBe(true)
+    })
 })

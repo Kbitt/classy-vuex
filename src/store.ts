@@ -1,44 +1,146 @@
-import { Module, StoreOptions, Store } from 'vuex'
+import { Module, StoreOptions, Store, ActionContext } from 'vuex'
 import {
     setStoreOptionMetadata,
     isNewable,
     getInstanceMetadata,
     ROOT_NS_KEY,
+    getStoreFromOptionsPrototype,
+    createProxy,
+    getVuexKeyMap,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
 import { getActions } from './action'
 import { getStates } from './state'
-import { createClassModule } from './base'
 import { getGetSets } from './getset'
+import { debounce } from 'lodash-es'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
 }
 
-function transformSingleGetterMethods(
-    store: Store<any>,
+const getAllKeys = (item: any) => {
+    let proto = Object.getPrototypeOf(item)
+    let props: string[] = []
+    do {
+        props.push(...Object.getOwnPropertyNames(proto))
+    } while ((proto = Object.getPrototypeOf(proto)))
+    return props
+}
+
+const createContext = (
+    target: any,
+    context: ActionContext<any, any>,
+    namespace: string | undefined
+) => {
+    const store = getStoreFromOptionsPrototype(target)
+    const { instance } = getInstanceMetadata(store, namespace || ROOT_NS_KEY)
+    if (!instance) {
+        throw new Error(
+            `Getting instance from namespace = '${namespace}' failed`
+        )
+    }
+    const getSets = getGetSets(target)
+    const proxy = createProxy(
+        context.state,
+        getSets.map(gs => gs.key)
+    )
+
+    // proxy non-decorator instance keys
+    const keyMap = getVuexKeyMap(target)
+
+    getAllKeys(instance).forEach(key => {
+        if (keyMap[key]) return
+        if (typeof instance[key] === 'function') {
+            proxy[key] = (instance[key] as Function).bind(proxy)
+        } else {
+            Object.defineProperty(proxy, key, {
+                get: () => instance[key],
+                set: value => (instance[key] = value),
+            })
+        }
+    })
+
+    getMutations(target).forEach(mut => {
+        proxy[mut] = (...args: any[]) => {
+            return context.commit(mut, ...args)
+        }
+    })
+    getActions(target).forEach(({ propertyKey }) => {
+        proxy[propertyKey] = (...args: any[]) =>
+            context.dispatch(propertyKey, ...args)
+    })
+    getGetters(target).forEach(getter => {
+        if (getter.isGetter) {
+            Object.defineProperty(proxy, getter.name, {
+                get: () =>
+                    getStoreFromOptionsPrototype(target).getters[getter.name],
+            })
+        } else {
+            proxy[getter.name] = () =>
+                getStoreFromOptionsPrototype(target).getters[getter.name]
+        }
+    })
+    getSets.forEach(({ mutationName, key }) => {
+        Object.defineProperty(proxy, key, {
+            get: () => context.state[key],
+            set: value => context.commit(mutationName, value),
+        })
+    })
+    return proxy
+}
+
+const getInstance = (target: any, namespace = ROOT_NS_KEY) =>
+    getInstanceMetadata(getStoreFromOptionsPrototype(target), namespace)
+        .instance
+
+function transformSingleActionMethod(
     options: Module<any, any>,
     namespace: string | undefined = undefined
 ) {
-    const optionsPrototype = (options as any).constructor.prototype
+    const targetOptions = namespace
+        ? getOptions(options, namespace.split('/'))
+        : options
+    const optionsPrototype = (targetOptions as any).constructor.prototype
+    const actions = getActions(optionsPrototype)
+    actions.forEach(({ propertyKey, options }) => {
+        const actionFn = (targetOptions as any)[propertyKey] as Function
+        targetOptions.actions = targetOptions.actions || {}
+        let fn = (_: ActionContext<any, any>, payload: any) =>
+            actionFn.call(getInstance(optionsPrototype, namespace), payload)
+        if (typeof options.debounce === 'number') {
+            fn = debounce(fn, options.debounce)
+        }
+        targetOptions.actions[propertyKey] = fn
+    })
+}
+
+function transformSingleGetterMethods(
+    options: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    const targetOptions = namespace
+        ? getOptions(options, namespace.split('/'))
+        : options
+    const optionsPrototype = (targetOptions as any).constructor.prototype
+    const getStore = () => getStoreFromOptionsPrototype(optionsPrototype)
     getGetters(optionsPrototype).forEach(getter => {
         const index = (namespace ? namespace + '/' : '') + getter.name
         if (getter.isGetter) {
             Object.defineProperty(optionsPrototype, getter.name, {
-                get: () => store.getters[index],
+                get: () => getStore().getters[index],
             })
         } else {
             optionsPrototype[getter.name] = () => {
-                return store.getters[index]
+                return getStore().getters[index]
             }
         }
     })
 }
 
 const getOptions = (options: Module<any, any>, path: string[]) => {
-    let result: Module<any, any> = options
+    let result = options
     path.forEach(part => {
-        if (!result.modules)
+        if (!result || !result.modules)
             throw new Error(
                 `Tried to retrieve module with path: ${path.join(
                     '/'
@@ -65,42 +167,45 @@ const getNamespaceParent = (
     return [rootOptions, undefined]
 }
 
-function transformGetterMethods(store: Store<any>, options: Module<any, any>) {
-    const transformModuleGetterMethods = (
-        store: Store<any>,
-        options: Module<any, any>,
-        path: string[] | null
-    ) => {
-        if (!path) {
-            if (options.modules) {
-                Object.keys(options.modules).forEach(key => {
-                    transformModuleGetterMethods(store, options, [key])
-                })
-            }
-
-            return
-        }
-
-        const targetOptions = getOptions(options, path)
-        if (targetOptions.namespaced) {
-            transformSingleGetterMethods(store, options, path.join('/'))
-        } else {
-            const [parentOptions, parentNamespace] = getNamespaceParent(
-                options,
-                path
-            )
-            transformSingleGetterMethods(store, parentOptions, parentNamespace)
-        }
-
-        if (targetOptions.modules) {
-            Object.keys(targetOptions.modules).forEach(key => {
-                transformModuleGetterMethods(store, options, [...path, key])
+function transformModuleMethods(
+    options: Module<any, any>,
+    path: string[] | null
+) {
+    if (!path) {
+        if (options.modules) {
+            Object.keys(options.modules).forEach(key => {
+                transformModuleMethods(options, [key])
             })
         }
+
+        return
     }
 
-    transformSingleGetterMethods(store, options)
-    transformModuleGetterMethods(store, options, null)
+    const targetOptions = getOptions(options, path)
+    if (targetOptions.namespaced) {
+        const ns = path.join('/')
+        transformSingleGetterMethods(options, ns)
+        transformSingleActionMethod(options, ns)
+    } else {
+        const [parentOptions, parentNamespace] = getNamespaceParent(
+            options,
+            path
+        )
+        transformSingleGetterMethods(parentOptions, parentNamespace)
+        transformSingleActionMethod(parentOptions, parentNamespace)
+    }
+
+    if (targetOptions.modules) {
+        Object.keys(targetOptions.modules).forEach(key => {
+            transformModuleMethods(options, [...path, key])
+        })
+    }
+}
+
+function transformInstanceMethods(options: Module<any, any>) {
+    transformSingleGetterMethods(options)
+    transformSingleActionMethod(options)
+    transformModuleMethods(options, null)
 }
 
 export function classModule<S extends {} = any>(ctor: {
@@ -118,7 +223,6 @@ export function classModule<S extends {} = any>(ctor: {
                 throw new Error('The options supplied to classModule ')
             }
             setStoreOptionMetadata(this, options)
-            transformGetterMethods(this, options)
         }
     }
 }
@@ -131,13 +235,17 @@ export const setStoreConstructor = (storeCtor: StoreConstructor<any>) => {
     _storeCtor = storeCtor
 }
 
+let _store: Store<any>
+
 export function createStore<S extends {}, T extends S>(
     ctor: T | ModuleCtor<T> | (() => T),
     ...args: any[]
 ): Store<S> {
     const superClass = classModule(_storeCtor)
     const options = isNewable(ctor) ? new ctor(...args) : ctor
-    return new superClass(createClassModule(() => options) as StoreOptions<S>)
+    const storeOptions = createClassModule(() => options) as StoreOptions<S>
+    transformInstanceMethods(storeOptions)
+    return (_store = new superClass(storeOptions))
 }
 
 const getState = <S>(
@@ -156,54 +264,90 @@ const getState = <S>(
 const getPathedFn = (name: string, namespace: string | undefined = undefined) =>
     namespace ? `${namespace}/${name}` : name
 
+const STORE_KEY = Symbol('STORE_KEY')
+const STATE_KEY = Symbol('STATE_KEY')
+const NS_KEY = Symbol('NAMESPACE_KEY')
+
 export function getModuleAs<T, S>(
     ctor: { new (...args: any[]): T },
     store: Store<S>,
     namespace: string | undefined = undefined
 ): T {
     const optionsPrototype = ctor.prototype
-    const instanceMap = getInstanceMetadata(store)
-    const instance = instanceMap[namespace || ROOT_NS_KEY].instance as T
+    const instance = getInstanceMetadata(store, namespace || ROOT_NS_KEY)
+        .instance as T
     const anyInstance = instance as any
-    const state = getState(store, namespace)
+
+    if (anyInstance[STORE_KEY]) return instance as T
+
+    anyInstance[NS_KEY] = namespace
+
+    anyInstance[STORE_KEY] = store
+
+    Object.defineProperty(anyInstance, STATE_KEY, {
+        get: () => getState(anyInstance[STORE_KEY], anyInstance[NS_KEY]),
+    })
 
     const getSets = getGetSets(optionsPrototype)
     getSets.forEach(gs => {
         Object.defineProperty(anyInstance, gs.key, {
-            get: () => state[gs.key],
+            get: () => anyInstance[STATE_KEY][gs.key],
             set: value =>
-                store.commit(getPathedFn(gs.mutationName, namespace), value),
+                anyInstance[STORE_KEY].commit(
+                    getPathedFn(gs.mutationName, anyInstance[NS_KEY]),
+                    value
+                ),
         })
     })
 
     getStates(optionsPrototype).forEach(stateKey => {
         if (getSets.some(gs => gs.key === stateKey)) return
         Object.defineProperty(anyInstance, stateKey, {
-            get: () => state[stateKey],
+            get: () => anyInstance[STATE_KEY][stateKey],
         })
     })
     getMutations(optionsPrototype).forEach(mut => {
-        const mutation = getPathedFn(mut, namespace)
-        anyInstance[mut] = (...args: any[]) => store.commit(mutation, ...args)
+        const mutation = getPathedFn(mut, anyInstance[NS_KEY])
+        anyInstance[mut] = (...args: any[]) =>
+            anyInstance[STORE_KEY].commit(mutation, ...args)
     })
 
-    getActions(optionsPrototype).forEach(action => {
+    getActions(optionsPrototype).forEach(({ propertyKey: action }) => {
         anyInstance[action] = (...args: any[]) => {
-            const actionPath = getPathedFn(action, namespace)
-            return store.dispatch(actionPath, ...args)
+            const actionPath = getPathedFn(action, anyInstance[NS_KEY])
+            return anyInstance[STORE_KEY].dispatch(actionPath, ...args)
         }
     })
 
     getGetters(optionsPrototype).forEach(getter => {
-        const path = getPathedFn(getter.name, namespace)
+        const path = getPathedFn(getter.name, anyInstance[NS_KEY])
         if (getter.isGetter) {
             Object.defineProperty(anyInstance, getter.name, {
-                get: () => store.getters[path],
+                get: () => anyInstance[STORE_KEY].getters[path],
             })
         } else {
-            anyInstance[getter.name] = () => store.getters[path]
+            anyInstance[getter.name] = () =>
+                anyInstance[STORE_KEY].getters[path]
         }
     })
 
     return instance as T
+}
+
+export function createClassModule<T>(
+    instanceOrFactory: T | { new (): T } | { (): T }
+): T {
+    const instance = isNewable(instanceOrFactory)
+        ? new instanceOrFactory()
+        : instanceOrFactory
+    return instance as T
+}
+
+export abstract class ClassyVuexBase {
+    getModuleAs<T>(
+        ctor: ModuleCtor<T>,
+        namespace: string | undefined = undefined
+    ) {
+        return getModuleAs(ctor, _store, namespace)
+    }
 }

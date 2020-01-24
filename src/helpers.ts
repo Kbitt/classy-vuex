@@ -17,7 +17,12 @@ export function mapModule<T>(
 
     const classModule = getModuleAs(ctor, this.$store, namespace)
 
-    const keys = [getStates, getMutations, getActions, getGetterKeys]
+    const keys = [
+        getStates,
+        getMutations,
+        (p: any) => getActions(p).map(a => a.propertyKey),
+        getGetterKeys,
+    ]
         .map(fn => [...fn(ctor.prototype)])
         .reduce((a, b) => a.concat(b))
 

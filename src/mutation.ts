@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { defineMutation } from './define'
-import { addToMetadataCollection, recordModule } from './reflect'
+import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 const MUTATIONS = Symbol('MUTATIONS')
 
 /** decorate a class method as a vuex mutation.
@@ -9,6 +9,7 @@ const MUTATIONS = Symbol('MUTATIONS')
 export function mutation(target: any, propertyKey: string) {
     addToMetadataCollection(MUTATIONS, target, propertyKey)
     recordModule(target)
+    recordVuexKey(target, propertyKey)
     defineMutation(target, propertyKey)
 }
 export function getMutations(target: any): string[] {

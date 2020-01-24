@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { addToMetadataCollection, recordModule } from './reflect'
+import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 import { defineGetter } from './define'
 const GETTERS = Symbol('GETTERS')
 
@@ -31,6 +31,7 @@ export function getter(
         isGetter: !!descriptor.get,
     }
     recordModule(target)
+    recordVuexKey(target, propertyKey)
     addToMetadataCollection(GETTERS, target, metadata)
     defineGetter(target, propertyKey, descriptor)
 }

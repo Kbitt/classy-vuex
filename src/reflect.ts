@@ -9,7 +9,7 @@ function addToMetadataMap(
     let map = Reflect.getOwnMetadata(metadataKey, target)
     if (!map) {
         map = Reflect.hasMetadata(metadataKey, target)
-            ? Reflect.getMetadata(metadataKey, target).slice(0)
+            ? Reflect.getMetadata(metadataKey, target)
             : {}
         Reflect.defineMetadata(metadataKey, map, target)
     }
@@ -48,9 +48,19 @@ const STORE_OPTIONS = Symbol('STORE_OPTIONS')
 const OPTIONS_STORE = Symbol('OPTIONS_STORE')
 
 const MODULE = Symbol('MODULE')
+const MODULE_KEY = Symbol('MODULE_KEY')
 
 export function recordModule(target: any) {
+    target.namespaced = true
     Reflect.defineMetadata(MODULE, true, target)
+}
+
+export function recordVuexKey(target: any, key: string) {
+    addToMetadataMap(MODULE_KEY, target, key, key)
+}
+
+export function getVuexKeyMap(target: any): Record<string, string> {
+    return Reflect.getMetadata(MODULE_KEY, target) || {}
 }
 
 export function isModule(target: any) {
@@ -65,21 +75,41 @@ export const ROOT_NS_KEY = '<root>'
 function setInstanceMetadata(
     store: Store<any>,
     options: Module<any, any>,
-    path: string | null
+    namespace = ROOT_NS_KEY
 ) {
-    const metadata: InstanceMetadata = { instance: options, path }
-    addToMetadataMap(OPTIONS_INSTANCE, store, path || ROOT_NS_KEY, metadata)
+    const metadata: InstanceMetadata = { instance: options, path: namespace }
+    addToMetadataMap(OPTIONS_INSTANCE, store, namespace, metadata)
     if (options.modules && Object.keys(options.modules).length) {
         Object.entries(options.modules).forEach(([key, value]) => {
-            setInstanceMetadata(store, value, path ? path + '/' + key : key)
+            setInstanceMetadata(
+                store,
+                value,
+                namespace && namespace !== ROOT_NS_KEY
+                    ? namespace + '/' + key
+                    : key
+            )
         })
     }
 }
 
-export function getInstanceMetadata(
-    store: Store<any>
-): Record<string, InstanceMetadata> {
-    return Reflect.getOwnMetadata(OPTIONS_INSTANCE, store) || {}
+export function getInstanceMetadata<T extends string | undefined>(
+    store: Store<any>,
+    namespace: T = undefined as T
+): T extends string ? InstanceMetadata : Record<string, InstanceMetadata> {
+    const metadata = Reflect.getMetadata(OPTIONS_INSTANCE, store) || {}
+    if (!namespace) return metadata
+    return metadata[namespace]
+}
+
+function defineStoreMetadata(store: Store<any>, options: Module<any, any>) {
+    const optionsPrototype = (options as any).constructor.prototype
+    Reflect.defineMetadata(OPTIONS_PROTO_STORE, store, optionsPrototype)
+    Reflect.defineMetadata(OPTIONS_STORE, store, options)
+    if (options.modules) {
+        Object.values(options.modules).forEach(m => {
+            defineStoreMetadata(store, m)
+        })
+    }
 }
 
 export function setStoreOptionMetadata<S>(
@@ -89,9 +119,8 @@ export function setStoreOptionMetadata<S>(
     const optionsPrototype = (options as any).constructor.prototype
     Reflect.defineMetadata(STORE_OPTIONS_PROTO, optionsPrototype, store)
     Reflect.defineMetadata(STORE_OPTIONS, options, store)
-    Reflect.defineMetadata(OPTIONS_PROTO_STORE, store, optionsPrototype)
-    Reflect.defineMetadata(OPTIONS_STORE, store, options)
-    setInstanceMetadata(store, options, null)
+    defineStoreMetadata(store, options)
+    setInstanceMetadata(store, options)
 }
 
 const mergeMetadata = (key: any, value: any, target: any) => {
