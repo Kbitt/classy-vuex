@@ -14,6 +14,7 @@ import { getActions } from './action'
 import { getStates } from './state'
 import { getGetSets } from './getset'
 import { debounce } from 'lodash-es'
+import { getModels } from './model'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
 }
@@ -89,9 +90,11 @@ const createContext = (
     return proxy
 }
 
-const getInstance = (target: any, namespace = ROOT_NS_KEY) =>
-    getInstanceMetadata(getStoreFromOptionsPrototype(target), namespace)
-        .instance
+const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
+    const store = getStoreFromOptionsPrototype(target)
+    const { instance } = getInstanceMetadata(store, namespace)
+    return getModuleAs(instance.constructor, store, namespace)
+}
 
 function transformSingleActionMethod(
     options: Module<any, any>,
@@ -262,7 +265,7 @@ const getState = <S>(
 }
 
 const getPathedFn = (name: string, namespace: string | undefined = undefined) =>
-    namespace ? `${namespace}/${name}` : name
+    namespace && namespace !== ROOT_NS_KEY ? `${namespace}/${name}` : name
 
 const STORE_KEY = Symbol('STORE_KEY')
 const STATE_KEY = Symbol('STATE_KEY')
@@ -288,20 +291,29 @@ export function getModuleAs<T, S>(
         get: () => getState(anyInstance[STORE_KEY], anyInstance[NS_KEY]),
     })
 
-    const getSets = getGetSets(optionsPrototype)
-    getSets.forEach(gs => {
+    getGetSets(optionsPrototype).forEach(gs => {
         Object.defineProperty(anyInstance, gs.key, {
             get: () => anyInstance[STATE_KEY][gs.key],
-            set: value =>
-                anyInstance[STORE_KEY].commit(
-                    getPathedFn(gs.mutationName, anyInstance[NS_KEY]),
+            set: value => {
+                const type = getPathedFn(gs.mutationName, anyInstance[NS_KEY])
+                anyInstance[STORE_KEY].commit(type, value)
+            },
+        })
+    })
+
+    getModels(optionsPrototype).forEach(m => {
+        Object.defineProperty(anyInstance, m.key, {
+            get: () => anyInstance[STATE_KEY][m.key],
+            set: value => {
+                return anyInstance[STORE_KEY].dispatch(
+                    getPathedFn(m.actionName, anyInstance[NS_KEY]),
                     value
-                ),
+                )
+            },
         })
     })
 
     getStates(optionsPrototype).forEach(stateKey => {
-        if (getSets.some(gs => gs.key === stateKey)) return
         Object.defineProperty(anyInstance, stateKey, {
             get: () => anyInstance[STATE_KEY][stateKey],
         })

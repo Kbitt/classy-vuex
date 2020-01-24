@@ -1,12 +1,13 @@
 import './_init'
 import { state } from '../src/state'
-import { createStore, mutation, action } from '../src'
+import { createStore, mutation, action, getset } from '../src'
 import { Store } from 'vuex'
-import { mapModule, Cpu } from '../src/helpers'
+import { mapModule, Cpu, mapComputed } from '../src/helpers'
 
 interface TestState {
     a: string
     b: number
+    loading: boolean
 }
 
 class Test implements TestState {
@@ -16,6 +17,9 @@ class Test implements TestState {
     b!: number
     @state(0)
     fooCalled!: number
+
+    @getset(false)
+    loading!: boolean
 
     @mutation
     incFoo() {
@@ -46,28 +50,17 @@ class Test implements TestState {
 
 describe('helpers.ts', () => {
     let store: Store<TestState>
-    let mapped: Record<keyof Test, Cpu>
+    let computed: Record<keyof Test, Cpu>
 
     beforeEach(() => {
         store = createStore(Test)
+
         const context = ({
             $store: store,
-            mapModule,
-        } as any) as import('vue').default & { mapModule: typeof mapModule }
-        mapped = context.mapModule(Test)
+            mapComputed,
+        } as any) as import('vue').default & { mapComputed: typeof mapComputed }
+        computed = context.mapComputed(Test)
     })
 
-    it('test mapped helper', async () => {
-        expect(typeof mapped.a).toBe('string')
-        expect(mapped.a).toBe('init a')
-        expect(typeof mapped.b).toBe('number')
-        expect(mapped.b).toBe(10)
-        expect(typeof mapped.fooCalled).toBe('number')
-        expect(mapped.fooCalled).toBe(0)
-        expect(typeof mapped.incFoo).toBe('function')
-        expect(typeof mapped.fooAction).toBe('function')
-        const fooPromise = (mapped.fooAction as Function)() as Promise<any>
-        await fooPromise
-        expect(mapped.fooCalled).toBe(1)
-    })
+    it('mapComputed', () => {})
 })

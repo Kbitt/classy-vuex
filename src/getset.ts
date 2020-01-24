@@ -3,7 +3,8 @@ import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 import { defineMutation, defineState } from './define'
 const GETSETS = Symbol('GETSETS')
 
-const getMutationName = (name: string) => `SET_${name.toLocaleUpperCase()}`
+export const getMutationName = (name: string) =>
+    `SET_${name.toLocaleUpperCase()}`
 export type GetSetMetadata = {
     initialValue: any
     key: string
@@ -36,4 +37,8 @@ export function getset<T>(
 
 export function getGetSets(target: any): GetSetMetadata[] {
     return Reflect.getMetadata(GETSETS, target) || []
+}
+
+export function getGetSetKeys(target: any): string[] {
+    return getGetSets(target).map(gs => gs.key)
 }
