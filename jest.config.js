@@ -1,8 +1,15 @@
 module.exports = {
     preset: 'ts-jest',
-    testEnvironment: 'node',
     transform: {
         '^.+\\.js$': 'babel-jest',
+        // process `*.vue` files with `vue-jest`
+        '.*\\.(vue)$': 'vue-jest',
     },
     transformIgnorePatterns: ['<rootDir>/node_modules/(?!lodash-es)'],
+    moduleFileExtensions: [
+        'js',
+        'ts',
+        // tell Jest to handle `*.vue` files
+        'vue',
+    ],
 }

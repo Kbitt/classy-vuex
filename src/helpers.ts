@@ -6,8 +6,11 @@ import { getActions } from './action'
 import { getGetterKeys, getGetters } from './getter'
 import { getVuexKeyMap } from './reflect'
 import { getGetSets, getGetSetKeys } from './getset'
+import { Store } from 'vuex'
+import { Accessors } from 'vue/types/options'
 
-export type Cpu = Function | { get: () => any; set: (value: any) => void }
+export type CpuProperty = { get: () => any; set: (value: any) => void }
+export type Cpu = Function | CpuProperty
 
 /** map the given module class constructor to a map of functions for Vue computed properties */
 export function mapModule<T>(
@@ -44,20 +47,22 @@ export function mapModule<T>(
     return result as Record<keyof T, Function>
 }
 
+export type VueComputed = Accessors<{ [key: string]: any }>
+
 export function mapComputed<T>(
-    this: import('vue').default,
     ctor: ModuleCtor<T>,
     namespace: string | undefined = undefined
-): Record<string, Cpu> {
-    const result: Record<string, Cpu> = {}
-    const classModule = getModuleAs(ctor, this.$store, namespace)
+): VueComputed {
+    const result: VueComputed = {}
+    const classModule = (store: Store<any>) =>
+        getModuleAs(ctor, store, namespace)
     const gsKeys = getGetSetKeys(ctor.prototype)
     const keys = [getStates, getGetterKeys, () => gsKeys]
         .map(fn => fn(ctor.prototype))
         .reduce((a, b) => [...a, ...b])
     keys.forEach(key => {
-        const get = () => {
-            const prop = classModule[key as keyof T]
+        const get = function(this: Vue) {
+            const prop = classModule(this.$store)[key as keyof T]
             // check for getter defined as function
             return typeof prop === 'function' ? prop() : prop
         }
@@ -68,7 +73,9 @@ export function mapComputed<T>(
 
         result[key] = {
             get,
-            set: value => (classModule[key as keyof T] = value),
+            set: function(this: Vue, value: any) {
+                classModule(this.$store)[key as keyof T] = value
+            },
         }
     })
     return result
