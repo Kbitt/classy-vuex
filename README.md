@@ -6,7 +6,7 @@
 
 `npm install --save classy-vuex` or `yarn add classy-vuex`
 
-`classy-vuex` does not depend directly (although typescript declarations reference several `vuex` types), so it necessary to pass in the `vuex` store constructor as below. It is also still necessary to initialize Vuex separately.
+`classy-vuex` does not depend directly on vuex (although typescript declarations reference several `vuex` types), so it necessary to pass in the `vuex` store constructor as below. It is also still necessary to initialize Vuex separately.
 
 ```typescript
 import Vue from 'vue'
