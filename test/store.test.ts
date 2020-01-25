@@ -72,14 +72,14 @@ describe('state.ts', () => {
     })
 
     test('use store reference', () => {
-        const testStore = getModule(Test, store)
+        const testStore = getModule(Test)
         testStore.setValue(21)
 
         expect(store.state.value).toBe(21)
     })
 
     test('namespaced module', () => {
-        const foo = getModule(Foo, store, 'foo')
+        const foo = getModule(Foo, 'foo')
         expect(!!foo).toBe(true)
         expect(foo.value).toBe(1000)
     })

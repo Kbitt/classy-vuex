@@ -53,7 +53,7 @@ describe('test nested namespaced modules', () => {
     })
 
     it('check first nested namespace', () => {
-        const b = getModule(B, store, 'b')
+        const b = getModule(B, 'b')
         expect(b.b).toBe('b')
         const newVal = 'newVal'
         b.b = newVal
@@ -61,7 +61,7 @@ describe('test nested namespaced modules', () => {
     })
 
     it('check second nested namespace', () => {
-        const c = getModule(C, store, 'b/c')
+        const c = getModule(C, 'b/c')
         expect(c.c).toBe('c')
         const newVal = 'newVal'
         c.c = newVal

@@ -32,7 +32,7 @@ describe('properties', () => {
     let test: Test
     beforeEach(() => {
         store = createStore(new Test(API))
-        test = getModule(Test, store)
+        test = getModule(Test)
     })
 
     it('api property is maintained', () => {
@@ -46,7 +46,7 @@ describe('properties', () => {
     it('repeat caching works', () => {
         let works = true
         try {
-            test = getModule(Test, store)
+            test = getModule(Test)
         } catch (_) {
             works = false
         }

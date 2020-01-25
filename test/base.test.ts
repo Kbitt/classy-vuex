@@ -1,16 +1,15 @@
 import './_init'
 import { getset, createStore, action, getModule } from '../src'
-import { ClassyVuexBase } from '../src/store'
 import { Store } from 'vuex'
 
-class B extends ClassyVuexBase {
+class B {
     @getset('b')
     b!: string
 
     @action()
     bAction() {
         return new Promise(resolve => {
-            const a = this.getModule(A, 'a')
+            const a = getModule(A, 'a')
             this.b = a.a
             resolve()
         })
@@ -47,7 +46,7 @@ describe('base.ts', () => {
     })
 
     it('can access another module', async () => {
-        const b = getModule(B, store, 'a/b')
+        const b = getModule(B, 'a/b')
         await b.bAction()
         expect(b.b).toBe('a')
         expect(store.state.a.b.b).toBe('a')

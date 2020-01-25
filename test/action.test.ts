@@ -76,7 +76,7 @@ describe('action.ts', () => {
 
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModule(Test, store)
+        mod = getModule(Test)
     })
 
     test('action-1 action works', async () => {

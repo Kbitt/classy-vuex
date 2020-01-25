@@ -2,7 +2,7 @@
 import ClassyVuex from '../../src'
 import { createStore } from '../../src'
 import Vuex, { Store } from 'vuex'
-import { mapComputed, CpuProperty, VueComputed } from '../../src/helpers'
+import { mapComputed, VueComputed } from '../../src/helpers'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'
 import { TestState, Test } from './helpers.types'
@@ -41,9 +41,11 @@ describe('helpers.ts', () => {
         expect(typeof computed.fooCalled).toBe('function')
         expect((computed.fooCalled as Function).call(context)).toBe(0)
         expect(typeof computed.loading).toBe('object')
-        expect(typeof (computed.loading as CpuProperty).get).toBe('function')
-        expect((computed.loading as CpuProperty).get.call(context)).toBe(false)
-        expect(typeof (computed.loading as CpuProperty).set).toBe('function')
+        expect(typeof (computed.loading as VueComputed).get).toBe('function')
+        expect(
+            ((computed.loading as VueComputed).get as Function).call(context)
+        ).toBe(false)
+        expect(typeof (computed.loading as VueComputed).set).toBe('function')
     })
 
     it('test in component', () => {

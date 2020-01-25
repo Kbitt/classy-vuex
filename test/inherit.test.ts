@@ -91,7 +91,7 @@ describe('test module inheritance', () => {
     })
 
     test('test inherited module with getModule', () => {
-        const sub = getModule(SubModule, store, 'sub')
+        const sub = getModule(SubModule, 'sub')
         expect(sub.a).toBe(INIT_A)
         expect(sub.b).toBe(INIT_B)
 

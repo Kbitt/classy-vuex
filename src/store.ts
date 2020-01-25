@@ -28,72 +28,10 @@ const getAllKeys = (item: any) => {
     return props
 }
 
-const createContext = (
-    target: any,
-    context: ActionContext<any, any>,
-    namespace: string | undefined
-) => {
-    const store = getStoreFromOptionsPrototype(target)
-    const { instance } = getInstanceMetadata(store, namespace || ROOT_NS_KEY)
-    if (!instance) {
-        throw new Error(
-            `Getting instance from namespace = '${namespace}' failed`
-        )
-    }
-    const getSets = getGetSets(target)
-    const proxy = createProxy(
-        context.state,
-        getSets.map(gs => gs.key)
-    )
-
-    // proxy non-decorator instance keys
-    const keyMap = getVuexKeyMap(target)
-
-    getAllKeys(instance).forEach(key => {
-        if (keyMap[key]) return
-        if (typeof instance[key] === 'function') {
-            proxy[key] = (instance[key] as Function).bind(proxy)
-        } else {
-            Object.defineProperty(proxy, key, {
-                get: () => instance[key],
-                set: value => (instance[key] = value),
-            })
-        }
-    })
-
-    getMutations(target).forEach(mut => {
-        proxy[mut] = (...args: any[]) => {
-            return context.commit(mut, ...args)
-        }
-    })
-    getActions(target).forEach(({ propertyKey }) => {
-        proxy[propertyKey] = (...args: any[]) =>
-            context.dispatch(propertyKey, ...args)
-    })
-    getGetters(target).forEach(getter => {
-        if (getter.isGetter) {
-            Object.defineProperty(proxy, getter.name, {
-                get: () =>
-                    getStoreFromOptionsPrototype(target).getters[getter.name],
-            })
-        } else {
-            proxy[getter.name] = () =>
-                getStoreFromOptionsPrototype(target).getters[getter.name]
-        }
-    })
-    getSets.forEach(({ mutationName, key }) => {
-        Object.defineProperty(proxy, key, {
-            get: () => context.state[key],
-            set: value => context.commit(mutationName, value),
-        })
-    })
-    return proxy
-}
-
 const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
     const store = getStoreFromOptionsPrototype(target)
     const { instance } = getInstanceMetadata(store, namespace)
-    return getModule(instance.constructor, store, namespace)
+    return getModule(instance.constructor, namespace)
 }
 
 function transformSingleActionMethod(
@@ -271,12 +209,12 @@ const STORE_KEY = Symbol('STORE_KEY')
 const STATE_KEY = Symbol('STATE_KEY')
 const NS_KEY = Symbol('NAMESPACE_KEY')
 
-export function getModule<T, S>(
+export function getModule<T>(
     ctor: { new (...args: any[]): T },
-    store: Store<S>,
     namespace: string | undefined = undefined
 ): T {
     const optionsPrototype = ctor.prototype
+    const store = getStoreFromOptionsPrototype(optionsPrototype)
     const instance = getInstanceMetadata(store, namespace || ROOT_NS_KEY)
         .instance as T
     const anyInstance = instance as any
@@ -353,13 +291,4 @@ export function createClassModule<T>(
         ? new instanceOrFactory()
         : instanceOrFactory
     return instance as T
-}
-
-export abstract class ClassyVuexBase {
-    getModule<T>(
-        ctor: ModuleCtor<T>,
-        namespace: string | undefined = undefined
-    ) {
-        return getModule(ctor, _store, namespace)
-    }
 }

@@ -30,7 +30,7 @@ describe('getter.ts', () => {
     let mod: Test
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModule(Test, store)
+        mod = getModule(Test)
     })
 
     test('test getter decorator', () => {

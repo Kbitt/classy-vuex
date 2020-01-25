@@ -31,7 +31,7 @@ describe('mutation.ts', () => {
     let mod: Test
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModule(Test, store)
+        mod = getModule(Test)
     })
 
     test('decorated mutations work', () => {

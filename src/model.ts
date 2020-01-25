@@ -60,10 +60,12 @@ export function model<T>(
     }
 }
 
+/** retrieve an array of model metadata for the given module prototype */
 export function getModels(target: any): ModelMetadata[] {
     return Reflect.getMetadata(MODELS, target) || []
 }
 
+/** retrieve an array of model keys for the given module prototype */
 export function getModelKeys(target: any): string[] {
     return getModels(target).map(m => m.key)
 }

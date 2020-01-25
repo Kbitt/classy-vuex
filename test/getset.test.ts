@@ -7,7 +7,7 @@ describe('getset.ts', () => {
     let mod: Test
     beforeEach(() => {
         store = getStore()
-        mod = getModule(Test, store)
+        mod = getModule(Test)
     })
     it('state and mutations are mapped', () => {
         expect(store.state.myString).toBe('')

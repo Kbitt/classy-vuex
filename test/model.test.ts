@@ -24,7 +24,7 @@ describe('model.ts', () => {
     const FILTER2 = 'FILTER2'
     beforeEach(() => {
         store = createStore(Test)
-        test = getModule(Test, store)
+        test = getModule(Test)
     })
 
     it('test store is mapped', async () => {
