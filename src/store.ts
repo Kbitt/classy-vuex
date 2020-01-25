@@ -93,7 +93,7 @@ const createContext = (
 const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
     const store = getStoreFromOptionsPrototype(target)
     const { instance } = getInstanceMetadata(store, namespace)
-    return getModuleAs(instance.constructor, store, namespace)
+    return getModule(instance.constructor, store, namespace)
 }
 
 function transformSingleActionMethod(
@@ -271,7 +271,7 @@ const STORE_KEY = Symbol('STORE_KEY')
 const STATE_KEY = Symbol('STATE_KEY')
 const NS_KEY = Symbol('NAMESPACE_KEY')
 
-export function getModuleAs<T, S>(
+export function getModule<T, S>(
     ctor: { new (...args: any[]): T },
     store: Store<S>,
     namespace: string | undefined = undefined
@@ -356,10 +356,10 @@ export function createClassModule<T>(
 }
 
 export abstract class ClassyVuexBase {
-    getModuleAs<T>(
+    getModule<T>(
         ctor: ModuleCtor<T>,
         namespace: string | undefined = undefined
     ) {
-        return getModuleAs(ctor, _store, namespace)
+        return getModule(ctor, _store, namespace)
     }
 }

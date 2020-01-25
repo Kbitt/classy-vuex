@@ -1,6 +1,5 @@
 import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 import { ActionDecoratorOptions } from './define'
-import { Module } from 'vuex'
 
 const ACTIONS = Symbol('ACTIONS')
 

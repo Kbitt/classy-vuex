@@ -1,5 +1,5 @@
 import './_init'
-import { getset, createStore, getModuleAs, action } from '../src'
+import { getset, createStore, getModule, action } from '../src'
 import { Store } from 'vuex'
 
 interface TestState {
@@ -32,7 +32,7 @@ describe('properties', () => {
     let test: Test
     beforeEach(() => {
         store = createStore(new Test(API))
-        test = getModuleAs(Test, store)
+        test = getModule(Test, store)
     })
 
     it('api property is maintained', () => {
@@ -46,7 +46,7 @@ describe('properties', () => {
     it('repeat caching works', () => {
         let works = true
         try {
-            test = getModuleAs(Test, store)
+            test = getModule(Test, store)
         } catch (_) {
             works = false
         }

@@ -1,5 +1,5 @@
 import './_init'
-import { getset, createStore, getModuleAs } from '../src'
+import { getset, createStore, getModule } from '../src'
 import { Module, Store } from 'vuex'
 import { getInstanceMetadata } from '../src/reflect'
 
@@ -53,7 +53,7 @@ describe('test nested namespaced modules', () => {
     })
 
     it('check first nested namespace', () => {
-        const b = getModuleAs(B, store, 'b')
+        const b = getModule(B, store, 'b')
         expect(b.b).toBe('b')
         const newVal = 'newVal'
         b.b = newVal
@@ -61,7 +61,7 @@ describe('test nested namespaced modules', () => {
     })
 
     it('check second nested namespace', () => {
-        const c = getModuleAs(C, store, 'b/c')
+        const c = getModule(C, store, 'b/c')
         expect(c.c).toBe('c')
         const newVal = 'newVal'
         c.c = newVal

@@ -1,13 +1,13 @@
 import { getStore, TestState, Test } from './_init'
 import { Store } from 'vuex'
-import { getModuleAs } from '../src'
+import { getModule } from '../src'
 
 describe('getset.ts', () => {
     let store: Store<TestState>
     let mod: Test
     beforeEach(() => {
         store = getStore()
-        mod = getModuleAs(Test, store)
+        mod = getModule(Test, store)
     })
     it('state and mutations are mapped', () => {
         expect(store.state.myString).toBe('')

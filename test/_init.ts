@@ -2,7 +2,8 @@ import Vue from 'vue'
 import Vuex, { Store, Module, StoreOptions } from 'vuex'
 import ClassyVuex from '../src'
 import { state, mutation, action, createStore, getset } from '../src'
-
+Vue.config.productionTip = false
+Vue.config.devtools = false
 Vue.use(Vuex)
 Vue.use(ClassyVuex, { Store })
 

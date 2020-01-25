@@ -1,6 +1,6 @@
 import './_init'
 import { Store } from 'vuex'
-import { getModuleAs, createStore } from '../src/store'
+import { getModule, createStore } from '../src/store'
 import { getter } from '../src/getter'
 import { getStoreFromOptions, getOptionsFromStore } from '../src/reflect'
 import { mutation } from '../src/mutation'
@@ -72,14 +72,14 @@ describe('state.ts', () => {
     })
 
     test('use store reference', () => {
-        const testStore = getModuleAs(Test, store)
+        const testStore = getModule(Test, store)
         testStore.setValue(21)
 
         expect(store.state.value).toBe(21)
     })
 
     test('namespaced module', () => {
-        const foo = getModuleAs(Foo, store, 'foo')
+        const foo = getModule(Foo, store, 'foo')
         expect(!!foo).toBe(true)
         expect(foo.value).toBe(1000)
     })

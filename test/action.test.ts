@@ -3,7 +3,7 @@ import { mutation } from '../src/mutation'
 import { Store, Module } from 'vuex'
 import { action } from '../src/action'
 import { getter } from '../src/getter'
-import { createStore, getModuleAs, getset } from '../src'
+import { createStore, getModule, getset } from '../src'
 import { state } from '../src/state'
 import { wait } from './_init'
 
@@ -76,7 +76,7 @@ describe('action.ts', () => {
 
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModuleAs(Test, store)
+        mod = getModule(Test, store)
     })
 
     test('action-1 action works', async () => {

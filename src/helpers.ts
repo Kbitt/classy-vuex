@@ -1,14 +1,14 @@
 /// <reference types="vuex" />
-import { ModuleCtor, getModuleAs } from './store'
+import { ModuleCtor, getModule } from './store'
 import { getStates } from './state'
 import { getMutations } from './mutation'
-import { getActions, getActionKeys } from './action'
-import { getGetterKeys, getGetters } from './getter'
+import { getActionKeys } from './action'
+import { getGetterKeys } from './getter'
 import { getVuexKeyMap } from './reflect'
 import { getGetSets, getGetSetKeys } from './getset'
 import { Store } from 'vuex'
 import { Accessors } from 'vue/types/options'
-import { getModels, getModelKeys } from './model'
+import { getModelKeys } from './model'
 
 export type CpuProperty = { get: () => any; set: (value: any) => void }
 export type Cpu = Function | CpuProperty
@@ -21,7 +21,7 @@ export function mapModule<T>(
 ): Record<keyof T, Cpu> {
     const result: Record<string, Cpu> = {}
 
-    const classModule = getModuleAs(ctor, this.$store, namespace)
+    const classModule = getModule(ctor, this.$store, namespace)
 
     const map = getVuexKeyMap(ctor.prototype)
 
@@ -55,8 +55,7 @@ export function mapComputed<T>(
     namespace: string | undefined = undefined
 ): VueComputed {
     const result: VueComputed = {}
-    const classModule = (store: Store<any>) =>
-        getModuleAs(ctor, store, namespace)
+    const classModule = (store: Store<any>) => getModule(ctor, store, namespace)
     const gsKeys = getGetSetKeys(ctor.prototype)
     const modelKeys = getModelKeys(ctor.prototype)
     const keys = [getStates, getGetterKeys, () => gsKeys, () => modelKeys]
@@ -89,7 +88,7 @@ export function mapMethods<T>(
 ): Record<string, Function> {
     const result: Record<string, Function> = {}
     const classModule = (store: Store<any>): any =>
-        getModuleAs(ctor, store, namespace)
+        getModule(ctor, store, namespace)
     const keys = [getMutations, getActionKeys]
         .map(fn => fn(ctor.prototype))
         .reduce((a, b) => a.concat(...b))

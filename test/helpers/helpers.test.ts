@@ -9,6 +9,8 @@ import { TestState, Test } from './helpers.types'
 
 describe('helpers.ts', () => {
     const localVue = createLocalVue()
+    localVue.config.productionTip = false
+    localVue.config.devtools = false
     localVue.use(Vuex)
     localVue.use(ClassyVuex, { Store })
     let store: Store<TestState>
@@ -86,5 +88,13 @@ describe('helpers.ts', () => {
         expect(store.state.fooCalled).toBe(2)
         btn.trigger('click')
         expect(store.state.fooCalled).toBe(3)
+    })
+
+    it('test using $getModule vm function', () => {
+        expect(store.state.filterActionCalled).toBe(false)
+        const wrapper = shallowMount(Helper, { localVue, store })
+        const btn = wrapper.find('#btn3')
+        btn.trigger('click')
+        expect(store.state.filterActionCalled).toBe(true)
     })
 })

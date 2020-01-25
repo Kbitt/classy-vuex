@@ -1,5 +1,5 @@
 import './_init'
-import { action, createStore, getset, getModuleAs } from '../src'
+import { action, createStore, getset, getModule } from '../src'
 import { model } from '../src/model'
 import { Store } from 'vuex'
 
@@ -24,7 +24,7 @@ describe('model.ts', () => {
     const FILTER2 = 'FILTER2'
     beforeEach(() => {
         store = createStore(Test)
-        test = getModuleAs(Test, store)
+        test = getModule(Test, store)
     })
 
     it('test store is mapped', async () => {

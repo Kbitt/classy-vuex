@@ -2,7 +2,7 @@ import './_init'
 import { mutation, getMutations } from '../src/mutation'
 import { Store } from 'vuex'
 import { state } from '../src/state'
-import { createStore, getModuleAs } from '../src'
+import { createStore, getModule } from '../src'
 
 interface TestState {
     value: number
@@ -31,7 +31,7 @@ describe('mutation.ts', () => {
     let mod: Test
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModuleAs(Test, store)
+        mod = getModule(Test, store)
     })
 
     test('decorated mutations work', () => {

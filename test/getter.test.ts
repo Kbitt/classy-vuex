@@ -2,7 +2,7 @@ import './_init'
 import { getter, getGetters } from '../src/getter'
 import { Store } from 'vuex'
 import { state } from '../src/state'
-import { createStore, getModuleAs } from '../src'
+import { createStore, getModule } from '../src'
 
 interface TestState {
     value: number
@@ -30,7 +30,7 @@ describe('getter.ts', () => {
     let mod: Test
     beforeEach(() => {
         store = createStore(Test)
-        mod = getModuleAs(Test, store)
+        mod = getModule(Test, store)
     })
 
     test('test getter decorator', () => {

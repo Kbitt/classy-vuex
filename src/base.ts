@@ -1,2 +1,2 @@
 import { isNewable, getStoreFromOptions } from './reflect'
-import { getModuleAs, ModuleCtor } from './store'
+import { getModule, ModuleCtor } from './store'
