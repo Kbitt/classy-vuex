@@ -22,3 +22,7 @@ export function action(options: ActionDecoratorOptions = {}) {
 export function getActions(target: any): ActionMetadata[] {
     return Reflect.getMetadata(ACTIONS, target) || []
 }
+
+export function getActionKeys(target: any): string[] {
+    return getActions(target).map(a => a.propertyKey)
+}

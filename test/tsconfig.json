@@ -1,4 +1,10 @@
 {
     "extends": "../tsconfig.json",
-    "include": ["./*.ts", "../src/*.ts", "./*.vue"]
+    "include": [
+        "./*.ts",
+        "../src/*.ts",
+        "./*.vue",
+        "helpers/helpers.types.ts",
+        "helpers/helpers.test.ts"
+    ]
 }

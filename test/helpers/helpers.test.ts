@@ -1,8 +1,8 @@
-/// <reference types="./shims-vue" />
-import ClassyVuex from '../src'
-import { createStore } from '../src'
+/// <reference types="../shims-vue" />
+import ClassyVuex from '../../src'
+import { createStore } from '../../src'
 import Vuex, { Store } from 'vuex'
-import { mapComputed, CpuProperty, VueComputed } from '../src/helpers'
+import { mapComputed, CpuProperty, VueComputed } from '../../src/helpers'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'
 import { TestState, Test } from './helpers.types'
@@ -66,5 +66,25 @@ describe('helpers.ts', () => {
         el.value = 'abc'
         input.trigger('input')
         expect(store.state.filterActionCalled).toBe(true)
+    })
+
+    it('test mapped methods action', () => {
+        expect(store.state.filterActionCalled).toBe(false)
+        const wrapper = shallowMount(Helper, { localVue, store })
+        const btn = wrapper.find('#btn1')
+        btn.trigger('click')
+        expect(store.state.filterActionCalled).toBe(true)
+    })
+
+    it('test mapped methods mutation', () => {
+        expect(store.state.fooCalled).toBe(0)
+        const wrapper = shallowMount(Helper, { localVue, store })
+        const btn = wrapper.find('#btn2')
+        btn.trigger('click')
+        expect(store.state.fooCalled).toBe(1)
+        btn.trigger('click')
+        expect(store.state.fooCalled).toBe(2)
+        btn.trigger('click')
+        expect(store.state.fooCalled).toBe(3)
     })
 })

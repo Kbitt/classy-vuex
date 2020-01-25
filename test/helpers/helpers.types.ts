@@ -1,5 +1,5 @@
-import { state, getset, getter, mutation, action } from '../src'
-import { model } from '../src/model'
+import { state, getset, getter, mutation, action } from '../../src'
+import { model } from '../../src/model'
 
 export interface TestState {
     a: string
@@ -7,6 +7,7 @@ export interface TestState {
     loading: boolean
     filter: string
     filterActionCalled: boolean
+    fooCalled: number
 }
 
 export class Test implements TestState {

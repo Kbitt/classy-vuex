@@ -2,7 +2,7 @@
 import { ModuleCtor, getModuleAs } from './store'
 import { getStates } from './state'
 import { getMutations } from './mutation'
-import { getActions } from './action'
+import { getActions, getActionKeys } from './action'
 import { getGetterKeys, getGetters } from './getter'
 import { getVuexKeyMap } from './reflect'
 import { getGetSets, getGetSetKeys } from './getset'
@@ -84,12 +84,20 @@ export function mapComputed<T>(
 }
 
 export function mapMethods<T>(
-    this: import('vue').default,
     ctor: ModuleCtor<T>,
     namespace: string | undefined = undefined
 ): Record<string, Function> {
     const result: Record<string, Function> = {}
-    const classModule = getModuleAs(ctor, this.$store, namespace)
-
+    const classModule = (store: Store<any>): any =>
+        getModuleAs(ctor, store, namespace)
+    const keys = [getMutations, getActionKeys]
+        .map(fn => fn(ctor.prototype))
+        .reduce((a, b) => a.concat(...b))
+    keys.forEach(key => {
+        result[key] = function(this: Vue) {
+            const m = classModule(this.$store)
+            return (m[key] as Function)(...arguments)
+        }
+    })
     return result
 }
