@@ -11,7 +11,7 @@
 ```typescript
 import Vue from 'vue'
 import Vuex, { Store } from 'vuex'
-import ClassyVuex from 'classy-vuex
+import ClassyVuex from 'classy-vuex'
 
 Vue.use(Vuex)
 Vue.use(ClassyVuex, { Store })
