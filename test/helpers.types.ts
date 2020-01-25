@@ -1,9 +1,12 @@
 import { state, getset, getter, mutation, action } from '../src'
+import { model } from '../src/model'
 
 export interface TestState {
     a: string
     b: number
     loading: boolean
+    filter: string
+    filterActionCalled: boolean
 }
 
 export class Test implements TestState {
@@ -46,5 +49,17 @@ export class Test implements TestState {
                 resolve()
             }, 100)
         })
+    }
+
+    @model('', 'filterAction')
+    filter!: string
+
+    @getset(false)
+    filterActionCalled!: boolean
+
+    @action()
+    filterAction() {
+        this.filterActionCalled = true
+        return Promise.resolve()
     }
 }

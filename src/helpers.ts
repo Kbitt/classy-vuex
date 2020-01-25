@@ -8,6 +8,7 @@ import { getVuexKeyMap } from './reflect'
 import { getGetSets, getGetSetKeys } from './getset'
 import { Store } from 'vuex'
 import { Accessors } from 'vue/types/options'
+import { getModels, getModelKeys } from './model'
 
 export type CpuProperty = { get: () => any; set: (value: any) => void }
 export type Cpu = Function | CpuProperty
@@ -57,7 +58,8 @@ export function mapComputed<T>(
     const classModule = (store: Store<any>) =>
         getModuleAs(ctor, store, namespace)
     const gsKeys = getGetSetKeys(ctor.prototype)
-    const keys = [getStates, getGetterKeys, () => gsKeys]
+    const modelKeys = getModelKeys(ctor.prototype)
+    const keys = [getStates, getGetterKeys, () => gsKeys, () => modelKeys]
         .map(fn => fn(ctor.prototype))
         .reduce((a, b) => [...a, ...b])
     keys.forEach(key => {
@@ -66,7 +68,7 @@ export function mapComputed<T>(
             // check for getter defined as function
             return typeof prop === 'function' ? prop() : prop
         }
-        if (!gsKeys.includes(key)) {
+        if (!gsKeys.includes(key) && !modelKeys.includes(key)) {
             result[key] = get
             return
         }

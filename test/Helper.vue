@@ -2,10 +2,12 @@
     <div>
         <div>{{ a }}</div>
         <input
+            id="input1"
             :value="loading"
             @input="e => (loading = e.target.checked)"
             type="checkbox"
         />
+        <input id="input2" :value="filter" @input="e => (filter = e.target.value)" type="text" />
     </div>
 </template>
 <script lang="ts">

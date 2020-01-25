@@ -23,7 +23,7 @@ describe('helpers.ts', () => {
 
     it('mapComputed', () => {
         const keys = Object.keys(computed)
-        expect(keys.length).toBe(5)
+        expect(keys.length).toBe(7)
         expect(keys).toContain('a')
         expect(keys).toContain('b')
         expect(keys).toContain('fooCalled')
@@ -52,10 +52,19 @@ describe('helpers.ts', () => {
 
     it('test get/set', () => {
         const wrapper = shallowMount(Helper, { localVue, store })
-        const input = wrapper.find('input')
+        const input = wrapper.find('#input1')
         const el = input.element as HTMLInputElement
         el.checked = true
         input.trigger('input')
         expect(store.state.loading).toBe(true)
+    })
+
+    it('test mapped model', () => {
+        const wrapper = shallowMount(Helper, { localVue, store })
+        const input = wrapper.find('#input2')
+        const el = input.element as HTMLInputElement
+        el.value = 'abc'
+        input.trigger('input')
+        expect(store.state.filterActionCalled).toBe(true)
     })
 })

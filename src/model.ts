@@ -63,3 +63,7 @@ export function model<T>(
 export function getModels(target: any): ModelMetadata[] {
     return Reflect.getMetadata(MODELS, target) || []
 }
+
+export function getModelKeys(target: any): string[] {
+    return getModels(target).map(m => m.key)
+}
