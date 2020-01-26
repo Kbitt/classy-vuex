@@ -6,15 +6,13 @@
 
 `npm install --save classy-vuex` or `yarn add classy-vuex`
 
-`classy-vuex` does not depend directly on vuex (although typescript declarations reference several `vuex` types), so it necessary to pass in the `vuex` store constructor as below. It is also still necessary to initialize Vuex separately.
-
 ```typescript
 import Vue from 'vue'
-import Vuex, { Store } from 'vuex'
+import Vuex from 'vuex'
 import ClassyVuex from 'classy-vuex'
 
 Vue.use(Vuex)
-Vue.use(ClassyVuex, { Store })
+Vue.use(ClassyVuex)
 ```
 
 ## Examples
@@ -67,7 +65,7 @@ export default {
 }
 ```
 
-The default way of writing vuex modules completely eliminates type safety in their use since `commit` and `dispatch` are called by string name. There are various ways to write helper functions and types that offer some type safety, but these can be extremely laborious. Instead, this package allows you to write type-safe classes, where (in the appropriate context) all of the same properties and functions are accessible with no loss of types. Using decorators that transform the class methods and properties into a valid vuex module, the same module can be re-written as follows:
+The default way of writing vuex modules completely eliminates type safety in their use since `commit` and `dispatch` are called by string name. There are various ways to write helper functions and types that offer some type safety, but these can be extremely laborious. Instead, this package allows you to write type-safe classes, where (in the appropriate context) all of the same properties and functions are accessible with no loss of typing. Using decorators that transform the class methods and properties into a valid vuex module, the same module can be re-written as follows:
 
 ```typescript
 export default class Todos {
@@ -228,4 +226,4 @@ Mark properties with the `model` decorator to generate a state property and sett
 -   Inheritance and reuse of module classes is supported.
 -   Constructor arguments and instance properties and methods are supported inside actions. Module instances are maintained for the lifetime of the store. However it is not recommended to make significant use of instance properties or methods not marked with `classy-vuex` decorators.
 -   While mutations/getters do not run with a true `this` argument of the class instance, they can still access static class properties/methods (accessed by name, not by `this`) or other non-class variables or functions.
--   Vuex is intended to be used with singleton stores and multiple modules to segment functionality, and `classy-vuex` relies on this fact. When `createStore` is called, the store instance that is returned is cached and stored in metadata for use later.
+-   Vuex is intended to be used with singleton stores and multiple modules to segment functionality, and `classy-vuex` relies on this fact. When `createStore` is called, the store instance that is returned is cached and stored in metadata for internal use.

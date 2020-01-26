@@ -4,12 +4,7 @@ export { getset, getGetSets, getGetSetKeys } from './getset'
 export { mutation, getMutations } from './mutation'
 export { state, getStates } from './state'
 export * from './model'
-import {
-    setStoreConstructor,
-    StoreConstructor,
-    ModuleCtor,
-    getModule,
-} from './store'
+import { ModuleCtor, getModule } from './store'
 export { getModule, classModule, createStore } from './store'
 export * from './helpers'
 
@@ -19,11 +14,7 @@ declare module 'vue/types/vue' {
     }
 }
 
-export type ClassyVuexPluginOptions = {
-    Store: StoreConstructor<any>
-}
-
-export function install(Vue: any, { Store }: ClassyVuexPluginOptions) {
+export function install(Vue: any) {
     Vue.prototype.$getModule = function<T>(
         this: Vue,
         ctor: ModuleCtor<T>,
@@ -31,7 +22,6 @@ export function install(Vue: any, { Store }: ClassyVuexPluginOptions) {
     ): T {
         return getModule(ctor, namespace || undefined)
     }
-    setStoreConstructor(Store)
 }
 
 export default { install }
