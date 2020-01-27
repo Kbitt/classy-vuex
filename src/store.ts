@@ -5,6 +5,7 @@ import {
     getInstanceMetadata,
     ROOT_NS_KEY,
     getStoreFromOptionsPrototype,
+    getReverseInstanceMetadata,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
@@ -20,8 +21,12 @@ export type ModuleCtor<T> = {
 
 const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
     const store = getStoreFromOptionsPrototype(target)
-    const { instance } = getInstanceMetadata(store, namespace)
-    return getModule(instance.constructor, namespace)
+    const metadata = getInstanceMetadata(store).get(namespace)
+    if (!metadata)
+        throw new Error(
+            'Could not retrieve metadata for namespace: ' + namespace
+        )
+    return getModule(metadata.instance.constructor, namespace)
 }
 
 function transformInstanceActions(
@@ -264,14 +269,93 @@ const STORE_KEY = Symbol('STORE_KEY')
 const STATE_KEY = Symbol('STATE_KEY')
 const NS_KEY = Symbol('NAMESPACE_KEY')
 
+const checkValidNamespace = (parts: string[]) => {
+    let childCount = 0
+    let parentCount = 0
+    let outofStart = false
+    parts.forEach(p => {
+        let childInc = false
+        let parentInc = false
+        if (p === '.') {
+            childCount++
+            childInc = true
+        } else if (p === '..') {
+            parentCount++
+            parentInc = true
+        } else outofStart = true
+
+        if (childCount > 1)
+            throw new Error(
+                `Invalid namespace, only one current path operator (./) allowed`
+            )
+        if (outofStart && (childInc || parentInc))
+            throw new Error(
+                'Invalid namespace, current/parent path operators only allowed at beginning of path'
+            )
+    })
+}
+
+/** Retrieve the module of the given constructor at either the optional namespace or root.
+ * If the namespace provided is a relative path,
+ * then a module instance must be provided as the context argument  */
 export function getModule<T>(
     ctor: { new (...args: any[]): T },
-    namespace: string | undefined = undefined
+    namespace?: string | undefined,
+    context?: any | undefined
 ): T {
     const optionsPrototype = ctor.prototype
     const store = getStoreFromOptionsPrototype(optionsPrototype)
-    const instance = getInstanceMetadata(store, namespace || ROOT_NS_KEY)
-        .instance as T
+    if (namespace && namespace.startsWith('.')) {
+        if (!context) {
+            throw new Error(
+                'Given namespace is relative, but no context is provided'
+            )
+        }
+
+        const rdata = getReverseInstanceMetadata(store).get(context)
+        if (!rdata)
+            throw new Error('Could not retrieve metadata for the given context')
+        const contextNamespace = rdata.path
+        const [first, ...parts] = namespace.split('/')
+        checkValidNamespace(parts)
+
+        if (first === '.') {
+            let ns =
+                (contextNamespace ? contextNamespace + '/' : '') +
+                parts.join('/')
+
+            if (ns.startsWith(ROOT_NS_KEY + '/'))
+                ns = ns.replace(ROOT_NS_KEY + '/', '')
+            return getModule(ctor, ns)
+        }
+
+        if (!contextNamespace)
+            throw new Error(
+                'Namespace references parent path, but context is root'
+            )
+
+        const contextParts = contextNamespace.split('/')
+        contextParts.pop()
+
+        while (parts[0] === '..') {
+            parts.shift()
+            contextParts.pop()
+        }
+        const l = contextParts.join('/')
+        const r = parts.join('/')
+        return getModule(ctor, l && r ? l + '/' + r : l ?? r)
+    }
+
+    const metadata = getInstanceMetadata(store).get(namespace || ROOT_NS_KEY)
+    if (!metadata)
+        throw new Error(
+            'Could not retrieve instance metadata for namespace:' + namespace
+        )
+    const instance = metadata.instance as T
+    if (!(instance instanceof ctor))
+        throw new Error(
+            `The module does not appear to be an instance of ${ctor.name}, the namespace '${namespace}' may not be correct`
+        )
     const anyInstance = instance as any
 
     if (anyInstance[STORE_KEY]) return instance as T

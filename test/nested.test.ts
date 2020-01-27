@@ -45,9 +45,9 @@ describe('test nested namespaced modules', () => {
 
     it('check metadata', () => {
         const metadata = getInstanceMetadata(store)
-        const keys = Object.keys(metadata)
-        expect(keys.includes('b')).toBe(true)
-        expect(keys.includes('b/c')).toBe(true)
+        const keys = [...metadata.keys()]
+        expect(keys).toContain('b')
+        expect(keys).toContain('b/c')
     })
 
     it('check first nested namespace', () => {
@@ -64,5 +64,35 @@ describe('test nested namespaced modules', () => {
         const newVal = 'newVal'
         c.c = newVal
         expect(c.c).toBe(newVal)
+    })
+
+    it('test access parent', () => {
+        const c = getModule(C, 'b/c')
+        const b = getModule(B, '..', c)
+        expect(b.b).toBe('b')
+    })
+
+    it('test access root', () => {
+        const c = getModule(C, 'b/c')
+        const a = getModule(A, '../..', c)
+        expect(a.a).toBe('a')
+    })
+
+    it('test root access child', () => {
+        const a = getModule(A)
+        const b = getModule(B, './b', a)
+        expect(b.b).toBe('b')
+    })
+
+    it('test root access grandchild', () => {
+        const a = getModule(A)
+        const c = getModule(C, './b/c', a)
+        expect(c.c).toBe('c')
+    })
+
+    it('test nested access child', () => {
+        const b = getModule(B, 'b')
+        const c = getModule(C, './c', b)
+        expect(c.c).toBe('c')
     })
 })

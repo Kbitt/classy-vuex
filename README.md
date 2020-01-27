@@ -209,11 +209,11 @@ Mark methods as getters with the `getter` decorator. This is not a decorator fac
 
 Syntax: `@getset<T>(mutationName?: string) foo!: T
 
-Mark properties with the `getset` decorator to generate both a state property and accompanying mutation. Properties marked with `getset` support both getting and setting of values directly to the property. Under the hood setting values invoke the generated mutation. This is a decorator factory, and passing an initial value is required just like with the state decorator. Optionally a mutation name can be passed to choose the name of the generated mutation, otherwise a mutation name will be generated according to the pattern `SET_<KEY_NAME_TO_UPPER>`.
+Mark properties with the `getset` decorator to generate both a state property and accompanying mutation. Properties marked with `getset` support both getting and setting of values directly to the property. Under the hood setting values invoke the generated mutation. This is a decorator factory, allowing optionally passing a mutation name to set for the generated mutation, otherwise a mutation name will be generated according to the pattern `SET_<KEY_NAME_TO_UPPER>`.
 
 ### `@model`
 
-Syntax: `@model<T>(initialValue: T, action: string, mutationName?: string, actionName?: string)`
+Syntax: `@model(action: string, mutationName?: string, actionName?: string)`
 
 Mark properties with the `model` decorator to generate a state property and setter mutation, just like `getset`, with an accompanying action that invokes a follow-up action after calling the mutation. Unlike `getset`, instead of immediately invoking the setter mutation when the property is set to a value, a generated action is invoked. This generated action invokes the method, and then invokes the action which name matches argument `action`, (this action must be defined separately). This is useful in situations where an action call always follows a mutation, for example when a property is bound to the value of a search box, and the search results should be retrieved whenever the value changes.
 

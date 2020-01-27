@@ -1,20 +1,15 @@
 import { Store, Module, StoreOptions } from 'vuex'
 
-function addToMetadataMap(
-    metadataKey: any,
-    target: any,
-    key: string | number | symbol,
-    value: any
-) {
-    let map = Reflect.getOwnMetadata(metadataKey, target)
+function addToMetadataMap(metadataKey: any, target: any, key: any, value: any) {
+    let map = Reflect.getOwnMetadata(metadataKey, target) as Map<any, any>
     if (!map) {
         map = Reflect.hasMetadata(metadataKey, target)
             ? Reflect.getMetadata(metadataKey, target)
-            : {}
+            : new Map()
         Reflect.defineMetadata(metadataKey, map, target)
     }
 
-    map[key] = value
+    map.set(key, value)
 }
 
 export function addToMetadataCollection(
@@ -59,15 +54,16 @@ export function recordVuexKey(target: any, key: string) {
     addToMetadataMap(MODULE_KEY, target, key, key)
 }
 
-export function getVuexKeyMap(target: any): Record<string, string> {
-    return Reflect.getMetadata(MODULE_KEY, target) || {}
+export function getVuexKeyMap(target: any): Map<string, string> {
+    return Reflect.getMetadata(MODULE_KEY, target) || new Map<string, string>()
 }
 
 export function isModule(target: any) {
     return Reflect.getMetadata(MODULE, target) === true
 }
 
-const OPTIONS_INSTANCE = Symbol('OPTIONS_INSTANCE')
+const OPTIONS_NS_TO_INSTANCE = Symbol('OPTIONS_NS_TO_INSTANCE')
+const OPTIONS_INSTANCE_TO_NS = Symbol('OPTIONS_INSTANCE_TO_NS')
 type InstanceMetadata = { instance: any; path: string | null }
 
 export const ROOT_NS_KEY = '<root>'
@@ -78,7 +74,8 @@ function setInstanceMetadata(
     namespace = ROOT_NS_KEY
 ) {
     const metadata: InstanceMetadata = { instance: options, path: namespace }
-    addToMetadataMap(OPTIONS_INSTANCE, store, namespace, metadata)
+    addToMetadataMap(OPTIONS_NS_TO_INSTANCE, store, namespace, metadata)
+    addToMetadataMap(OPTIONS_INSTANCE_TO_NS, store, options, metadata)
     if (options.modules && Object.keys(options.modules).length) {
         Object.entries(options.modules).forEach(([key, value]) => {
             setInstanceMetadata(
@@ -92,13 +89,22 @@ function setInstanceMetadata(
     }
 }
 
-export function getInstanceMetadata<T extends string | undefined>(
-    store: Store<any>,
-    namespace: T = undefined as T
-): T extends string ? InstanceMetadata : Record<string, InstanceMetadata> {
-    const metadata = Reflect.getMetadata(OPTIONS_INSTANCE, store) || {}
-    if (!namespace) return metadata
-    return metadata[namespace]
+export function getInstanceMetadata(
+    store: Store<any>
+): Map<string, InstanceMetadata> {
+    return (
+        Reflect.getMetadata(OPTIONS_NS_TO_INSTANCE, store) ||
+        new Map<string, InstanceMetadata>()
+    )
+}
+
+export function getReverseInstanceMetadata(
+    store: Store<any>
+): Map<any, InstanceMetadata> {
+    return (
+        Reflect.getMetadata(OPTIONS_INSTANCE_TO_NS, store) ||
+        new Map<any, InstanceMetadata>()
+    )
 }
 
 function defineStoreMetadata(store: Store<any>, options: Module<any, any>) {
