@@ -9,7 +9,7 @@ import {
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
 import { getActions } from './action'
-import { getStates, getStateKeys } from './state'
+import { getStates } from './state'
 import { getGetSets } from './getset'
 import { debounce } from 'lodash-es'
 import { getModels } from './model'
@@ -95,7 +95,7 @@ function transformInstanceGetSets(
             this[gs.key] = value
         }
         defineMutation(options, gs.mutationName)
-        defineState(gs.initialValue, options, gs.key)
+        defineState(options, gs.key)
     })
 }
 
@@ -108,8 +108,8 @@ function transformInstanceState(
         : rootOptions
     const prototype = Object.getPrototypeOf(options)
     const stateProps = getStates(prototype)
-    stateProps.forEach(({ propertyKey, initialValue }) => {
-        defineState(initialValue, options, propertyKey)
+    stateProps.forEach(propertyKey => {
+        defineState(options, propertyKey)
     })
 }
 
@@ -122,12 +122,12 @@ function transformInstanceModels(
         : rootOptions
     const prototype = Object.getPrototypeOf(options)
     getModels(prototype).forEach(
-        ({ initialValue, key, action, actionName, mutationName }) => {
+        ({ key, action, actionName, mutationName }) => {
             ;(options as any)[mutationName] = function(this: any, value: any) {
                 this[key] = value
             }
             defineMutation(options, mutationName)
-            defineState(initialValue, options, key)
+            defineState(options, key)
             if (!options.actions) options.actions = {}
             options.actions[actionName] = (
                 { dispatch, commit }: ActionContext<any, any>,
@@ -305,7 +305,7 @@ export function getModule<T>(
         })
     })
 
-    getStateKeys(optionsPrototype).forEach(stateKey => {
+    getStates(optionsPrototype).forEach(stateKey => {
         Object.defineProperty(anyInstance, stateKey, {
             get: () => anyInstance[STATE_KEY][stateKey],
         })

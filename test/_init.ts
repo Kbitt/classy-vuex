@@ -15,11 +15,11 @@ export interface TestState {
 
 export class Test implements TestState {
     strict = true
-    @state(0)
-    value!: number
+    @state
+    value = 0
 
-    @getset('')
-    myString!: string
+    @getset()
+    myString = ''
 
     @mutation
     setValue(payload: { value: number }) {

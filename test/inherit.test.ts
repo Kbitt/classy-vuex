@@ -11,9 +11,8 @@ const INIT_A = 'initial a'
 const BASE_MSG = 'set by base class'
 
 class BaseModule implements BaseModuleState {
-    namespaced = true
-    @state(INIT_A)
-    a!: string
+    @state
+    a = INIT_A
 
     @mutation
     setA(a: string) {
@@ -42,9 +41,8 @@ const INIT_B = 'initial b'
 const SUPER_B = 'msg by super class'
 
 class SubModule extends BaseModule implements SubModuleState {
-    namespaced = true
-    @state(INIT_B)
-    b!: string
+    @state
+    b = INIT_B
 
     @mutation
     setB(b: string) {
@@ -94,7 +92,7 @@ interface RootState {
     another: BaseModuleState
 }
 
-class Root implements StoreOptions<RootState> {
+class Root {
     strict = true
     base!: BaseModule
     sub!: SubModule

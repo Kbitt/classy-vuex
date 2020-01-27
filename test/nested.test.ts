@@ -7,9 +7,9 @@ interface AState {
     a: string
 }
 
-class A implements AState, Module<AState, any> {
-    @getset('a')
-    a!: string
+class A implements AState {
+    @getset()
+    a = 'a'
 
     modules = {
         b: new B(),
@@ -20,10 +20,9 @@ interface BState {
     b: string
 }
 
-class B implements BState, Module<BState, any> {
-    namespaced = true
-    @getset('b')
-    b!: string
+class B implements BState {
+    @getset()
+    b = 'b'
     modules = {
         c: new C(),
     }
@@ -33,10 +32,9 @@ interface CState {
     c: string
 }
 
-class C implements CState, Module<CState, any> {
-    namespaced = true
-    @getset('c')
-    c!: string
+class C implements CState {
+    @getset()
+    c = 'c'
 }
 
 describe('test nested namespaced modules', () => {

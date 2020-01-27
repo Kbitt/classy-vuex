@@ -11,15 +11,15 @@ export interface TestState {
 }
 
 export class Test implements TestState {
-    @state('init a')
-    a!: string
-    @state(10)
-    b!: number
-    @state(0)
-    fooCalled!: number
+    @state
+    a = 'init a'
+    @state
+    b = 10
+    @state
+    fooCalled = 0
 
-    @getset(false)
-    loading!: boolean
+    @getset()
+    loading = false
 
     @getter
     get fooGet() {
@@ -52,11 +52,11 @@ export class Test implements TestState {
         })
     }
 
-    @model('', 'filterAction')
-    filter!: string
+    @model('filterAction')
+    filter = ''
 
-    @getset(false)
-    filterActionCalled!: boolean
+    @getset()
+    filterActionCalled = false
 
     @action()
     filterAction() {

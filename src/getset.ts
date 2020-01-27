@@ -5,22 +5,17 @@ const GETSETS = Symbol('GETSETS')
 export const getMutationName = (name: string) =>
     `SET_${name.toLocaleUpperCase()}`
 export type GetSetMetadata = {
-    initialValue: any
     key: string
     mutationName: string
 }
 /** Define a property  */
-export function getset<T>(
-    initialValue: T,
-    mutationName: string | undefined = undefined
-) {
+export function getset<T>(mutationName: string | undefined = undefined) {
     return function(target: any, propertyKey: string) {
         recordModule(target)
         recordVuexKey(target, propertyKey)
 
         const mut = mutationName || getMutationName(propertyKey)
         const data: GetSetMetadata = {
-            initialValue,
             key: propertyKey,
             mutationName: mut,
         }

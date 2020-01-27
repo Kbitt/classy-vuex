@@ -11,8 +11,8 @@ interface TestState {
 const randomNumber = Math.floor(Math.random() * 1000)
 
 class Test implements TestState {
-    @state(randomNumber)
-    value!: number
+    @state
+    value = randomNumber
 
     @getter
     getNext() {

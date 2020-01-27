@@ -11,18 +11,17 @@ interface FooState {
     text: string
 }
 class Sub implements FooState {
-    namespaced = true
-    @state(I_VAL + 1) value!: number
-    @state(C_VAL + 1) count!: number
-    @state(T_VAL + 1) text!: string
+    @state value = I_VAL + 1
+    @state count = C_VAL + 1
+    @state text = T_VAL + 1
 }
 interface FooWithSubState extends FooState {
     sub: FooState
 }
 class Foo implements FooWithSubState {
-    @state(I_VAL) value!: number
-    @state(C_VAL) count!: number
-    @state(T_VAL) text!: string
+    @state value = I_VAL
+    @state count = C_VAL
+    @state text = T_VAL
     sub!: FooState
 
     modules = {

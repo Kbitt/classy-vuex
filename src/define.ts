@@ -25,21 +25,17 @@ export function defineGetter(
     }
 }
 
-export function defineState<T>(
-    initialValue: T,
-    target: any,
-    propertyKey: string
-) {
+export function defineState<T>(target: any, propertyKey: string) {
     // extend the state
     const s = target.state as object | (() => object) | undefined
     if (s) {
         // extend state with initialValue
         target.state = () => ({
             ...(typeof s === 'function' ? s() : s),
-            [propertyKey]: initialValue,
+            [propertyKey]: target[propertyKey],
         })
     } else {
         // default: create state factory function
-        target.state = () => ({ [propertyKey]: initialValue })
+        target.state = () => ({ [propertyKey]: target[propertyKey] })
     }
 }

@@ -12,8 +12,8 @@ class Test implements TestState {
         this.api = api
     }
 
-    @getset('value')
-    value!: string
+    @getset()
+    value = 'value'
 
     @action()
     fooAction() {

@@ -17,14 +17,14 @@ const randomNumber = Math.floor(Math.random() * 1000)
 
 class Test implements TestState, Module<TestState, any> {
     state!: TestState
-    @state(0)
-    value!: number
+    @state
+    value = 0
 
-    @getset(0)
-    debouncedCalled!: number
+    @getset()
+    debouncedCalled = 0
 
-    @getset('')
-    debounceCheck!: string
+    @getset()
+    debounceCheck = ''
 
     @action()
     foo() {

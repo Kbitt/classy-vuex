@@ -10,8 +10,8 @@ interface TestState {
     value: number
 }
 class InnerFoo implements TestState {
-    @state(20202)
-    value!: number
+    @state
+    value = 20202
 
     @getter
     getSomething() {
@@ -19,9 +19,8 @@ class InnerFoo implements TestState {
     }
 }
 class Foo implements TestState {
-    namespaced = true
-    @state(1000)
-    value!: number
+    @state
+    value = 1000
 
     @getter
     getFromFoo() {
@@ -33,8 +32,8 @@ class Foo implements TestState {
     }
 }
 class Test implements TestState {
-    @state(10)
-    value!: number
+    @state
+    value = 10
 
     @mutation
     setValue(value: number) {

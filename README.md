@@ -69,11 +69,11 @@ The default way of writing vuex modules completely eliminates type safety in the
 
 ```typescript
 export default class Todos {
-    @state([])
-    todos!: Todo[]
+    @state
+    todos: Todo[] = []
 
-    @getset(false, 'SET_LOADING') // shortcut creating a state property and setter mutation
-    loading!: boolean
+    @getset('SET_LOADING') // shortcut creating a state property and setter mutation
+    loading = false
 
     @mutation
     addTodo(todo: Todo) {
@@ -183,9 +183,9 @@ export default {
 
 ### `@state`
 
-Syntax: `state<T>(initialValue: T) foo!: T`
+Syntax: `@state foo = <expr | value>`
 
-All state properties must be marked with the `state` decorator. This is a decorator factory that must be called with the initial value of the state property. It may be convenient to mark state properties with the non-null assertion operator (`!`, see examples), to avoid having to add otherwise trivial initialization (since the values with be initiated by the decorators)
+All state properties must be marked with the `state` decorator. Whatever the value is for the instance passed to `createStore` will be used as the initial value.
 
 ### `@mutation`
 
@@ -207,7 +207,7 @@ Mark methods as getters with the `getter` decorator. This is not a decorator fac
 
 ### `@getset`
 
-Syntax: `@getset<T>(initialValue: T, mutationName?: string) foo!: T
+Syntax: `@getset<T>(mutationName?: string) foo!: T
 
 Mark properties with the `getset` decorator to generate both a state property and accompanying mutation. Properties marked with `getset` support both getting and setting of values directly to the property. Under the hood setting values invoke the generated mutation. This is a decorator factory, and passing an initial value is required just like with the state decorator. Optionally a mutation name can be passed to choose the name of the generated mutation, otherwise a mutation name will be generated according to the pattern `SET_<KEY_NAME_TO_UPPER>`.
 

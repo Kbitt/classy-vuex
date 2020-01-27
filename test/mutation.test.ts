@@ -9,8 +9,8 @@ interface TestState {
 }
 
 class Test implements TestState {
-    @state(0)
-    value!: number
+    @state
+    value = 0
 
     @mutation
     setValue(payload: { value: number }) {

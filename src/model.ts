@@ -6,7 +6,6 @@ const MODELS = Symbol('MODELS')
 const getActionName = (name: string) => `setModel_${name}`
 
 export type ModelMetadata = {
-    initialValue: any
     key: string
     mutationName: string
     actionName: string
@@ -17,8 +16,7 @@ export type ModelMetadata = {
  * and an action that dispatches the provided action name after setting.
  * Basically just like getset but with an action that fires afterword
  * */
-export function model<T>(
-    initialValue: T,
+export function model(
     action: string,
     mutationName: string | null | undefined = undefined,
     actioName: string | null | undefined = undefined
@@ -31,7 +29,6 @@ export function model<T>(
         const act = actioName || getActionName(propertyKey)
 
         const metadata: ModelMetadata = {
-            initialValue,
             key: propertyKey,
             mutationName: mut,
             actionName: act,

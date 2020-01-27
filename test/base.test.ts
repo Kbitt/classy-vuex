@@ -3,8 +3,8 @@ import { getset, createStore, action, getModule } from '../src'
 import { Store } from 'vuex'
 
 class B {
-    @getset('b')
-    b!: string
+    @getset()
+    b = 'b'
 
     @action()
     bAction() {
@@ -17,8 +17,8 @@ class B {
 }
 
 class A {
-    @getset('a')
-    a!: string
+    @getset()
+    a = 'a'
 
     b!: { b: string }
 
@@ -28,8 +28,8 @@ class A {
 }
 
 class Root {
-    @getset('r')
-    r!: string
+    @getset()
+    r = 'r'
 
     a!: { a: string; b: { b: string } }
 

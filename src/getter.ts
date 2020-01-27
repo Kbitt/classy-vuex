@@ -8,8 +8,8 @@ const GETTERS = Symbol('GETTERS')
  * with the action, mutation or others marked with getter will not work.
  * @example
  * class Foo {
- *   @state('a string')
- *   myString!: string
+ *   @state
+ *   myString = 'a string'
  *   @getter
  *   get someValue() {
  *      return this.myString.length

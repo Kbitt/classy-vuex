@@ -4,11 +4,11 @@ import { model } from '../src/model'
 import { Store } from 'vuex'
 
 class Test {
-    @model('', 'read')
-    filter!: string
+    @model('read')
+    filter = ''
 
-    @getset(false)
-    readCalled!: boolean
+    @getset()
+    readCalled = false
 
     @action()
     read() {
