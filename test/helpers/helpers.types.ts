@@ -10,6 +10,24 @@ export interface TestState {
     fooCalled: number
 }
 
+export class SubTest {
+    @state
+    value = 123
+
+    @getter
+    get next() {
+        return this.value + 1
+    }
+
+    @getset()
+    filter = ''
+
+    @action()
+    subAction() {
+        return Promise.resolve()
+    }
+}
+
 export class Test implements TestState {
     @state
     a = 'init a'
@@ -62,5 +80,9 @@ export class Test implements TestState {
     filterAction() {
         this.filterActionCalled = true
         return Promise.resolve()
+    }
+
+    modules = {
+        sub: new SubTest(),
     }
 }

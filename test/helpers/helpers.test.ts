@@ -2,10 +2,10 @@
 import ClassyVuex from '../../src'
 import { createStore } from '../../src'
 import Vuex, { Store } from 'vuex'
-import { mapComputed, VueComputed } from '../../src/helpers'
+import { mapComputed, VueComputed, mapMethods } from '../../src/helpers'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'
-import { TestState, Test } from './helpers.types'
+import { TestState, Test, SubTest } from './helpers.types'
 
 describe('helpers.ts', () => {
     const localVue = createLocalVue()
@@ -21,6 +21,77 @@ describe('helpers.ts', () => {
         store = createStore(Test)
         context = { $store: store }
         computed = mapComputed(Test)
+    })
+
+    it('test transformKeys w/ mapComputed', () => {
+        const prefix = 'test_'
+        const testComputed = mapComputed(Test, {
+            transformKey: key => prefix + key,
+        })
+
+        expect(Object.keys(testComputed).some(k => !k.startsWith(prefix))).toBe(
+            false
+        )
+    })
+
+    it('test transformKeys w/ namespaced mapComputed', () => {
+        const prefix = 'test_'
+        const testComputed = mapComputed(SubTest, 'sub', {
+            transformKey: key => prefix + key,
+        })
+
+        console.log(JSON.stringify(Object.keys(testComputed)))
+
+        expect(Object.keys(testComputed).some(k => !k.startsWith(prefix))).toBe(
+            false
+        )
+    })
+
+    it('test transformKeys w/ mapMethods', () => {
+        const prefix = 'test_'
+        const testMethods = mapMethods(Test, {
+            transformKey: key => prefix + key,
+        })
+
+        expect(Object.keys(testMethods).some(k => !k.startsWith(prefix))).toBe(
+            false
+        )
+    })
+
+    it('test exclude w/ mapComputed', () => {
+        const testComputed = mapComputed(Test, {
+            exclude: ['filter', 'fooGet'],
+        })
+
+        expect(
+            Object.keys(testComputed).some(
+                k => k === 'filter' || k === 'fooGet'
+            )
+        ).toBe(false)
+    })
+
+    it('test exclude w/ namespaced mapComputed', () => {
+        const testComputed = mapComputed(SubTest, {
+            exclude: ['value', 'next'],
+        })
+
+        expect(
+            Object.keys(testComputed).some(k => k === 'value' || k === 'next')
+        ).toBe(false)
+
+        expect(Object.keys(testComputed)).toContain('filter')
+    })
+
+    it('test exclude w/ mapMethods', () => {
+        const testComputed = mapMethods(Test, {
+            exclude: ['incFoo', 'setBAction'],
+        })
+
+        expect(
+            Object.keys(testComputed).some(
+                k => k === 'incFoo' || k === 'setBAction'
+            )
+        ).toBe(false)
     })
 
     it('mapComputed', () => {
