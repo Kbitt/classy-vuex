@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
-import { defineMutation, defineState } from './define'
 const GETSETS = Symbol('GETSETS')
 
 export const getMutationName = (name: string) =>
@@ -26,12 +25,6 @@ export function getset<T>(
             mutationName: mut,
         }
         addToMetadataCollection(GETSETS, target, data)
-        target[mut] = function(this: any, value: any) {
-            this[propertyKey] = value
-        }
-
-        defineMutation(target, mut)
-        defineState(initialValue, target, propertyKey)
     }
 }
 

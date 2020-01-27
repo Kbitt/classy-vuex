@@ -1,7 +1,5 @@
 import { recordModule, recordVuexKey, addToMetadataCollection } from './reflect'
 import { getMutationName } from './getset'
-import { defineMutation, defineState } from './define'
-import { ActionContext } from 'vuex'
 
 const MODELS = Symbol('MODELS')
 
@@ -41,22 +39,6 @@ export function model<T>(
         }
 
         addToMetadataCollection(MODELS, target, metadata)
-
-        // define mutation function
-        target[mut] = function(this: any, value: any) {
-            this[propertyKey] = value
-        }
-
-        defineMutation(target, mut)
-        defineState(initialValue, target, propertyKey)
-        if (!target.actions) target.actions = {}
-        target.actions[act] = (
-            { dispatch, commit }: ActionContext<any, any>,
-            value: any
-        ) => {
-            commit(mut, value)
-            return dispatch(action)
-        }
     }
 }
 

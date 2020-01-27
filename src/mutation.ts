@@ -1,5 +1,4 @@
 import 'reflect-metadata'
-import { defineMutation } from './define'
 import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
 const MUTATIONS = Symbol('MUTATIONS')
 
@@ -10,7 +9,6 @@ export function mutation(target: any, propertyKey: string) {
     addToMetadataCollection(MUTATIONS, target, propertyKey)
     recordModule(target)
     recordVuexKey(target, propertyKey)
-    defineMutation(target, propertyKey)
 }
 export function getMutations(target: any): string[] {
     return Reflect.getMetadata(MUTATIONS, target) || ([] as string[])

@@ -1,6 +1,6 @@
 /// <reference types="vuex" />
 import { ModuleCtor, getModule } from './store'
-import { getStates } from './state'
+import { getStates, getStateKeys } from './state'
 import { getMutations } from './mutation'
 import { getActionKeys } from './action'
 import { getGetterKeys } from './getter'
@@ -21,9 +21,9 @@ export function mapComputed<T>(
     const classModule = () => getModule(ctor, namespace)
     const gsKeys = getGetSetKeys(ctor.prototype)
     const modelKeys = getModelKeys(ctor.prototype)
-    const keys = [getStates, getGetterKeys, () => gsKeys, () => modelKeys]
+    const keys = [getStateKeys, getGetterKeys, () => gsKeys, () => modelKeys]
         .map(fn => fn(ctor.prototype))
-        .reduce((a, b) => [...a, ...b])
+        .reduce((a, b) => a.concat(b))
     keys.forEach(key => {
         const get = function(this: Vue) {
             const prop = classModule()[key as keyof T]

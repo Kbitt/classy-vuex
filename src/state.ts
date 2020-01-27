@@ -1,7 +1,11 @@
 import { addToMetadataCollection, recordModule, recordVuexKey } from './reflect'
-import { defineState } from './define'
 
 const STATES = Symbol('STATES')
+
+export type StateMetadata = {
+    initialValue: any
+    propertyKey: string
+}
 
 /** Mark a class property as a state property. The initial value must be passed to the decorator
  *  An initialization value set on the property directly will be ignored as it is not available to the decorator
@@ -14,13 +18,20 @@ const STATES = Symbol('STATES')
  */
 export function state<T>(initialValue: T) {
     return function(target: any, propertyKey: string) {
-        addToMetadataCollection(STATES, target, propertyKey)
+        const metadata: StateMetadata = {
+            initialValue,
+            propertyKey,
+        }
+        addToMetadataCollection(STATES, target, metadata)
         recordModule(target)
         recordVuexKey(target, propertyKey)
-        defineState(initialValue, target, propertyKey)
     }
 }
 
-export function getStates(target: any): string[] {
+export function getStates(target: any): StateMetadata[] {
     return Reflect.getMetadata(STATES, target) || []
+}
+
+export function getStateKeys(target: any): string[] {
+    return getStates(target).map(s => s.propertyKey)
 }

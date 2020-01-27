@@ -102,7 +102,7 @@ export function getInstanceMetadata<T extends string | undefined>(
 }
 
 function defineStoreMetadata(store: Store<any>, options: Module<any, any>) {
-    const optionsPrototype = (options as any).constructor.prototype
+    const optionsPrototype = Object.getPrototypeOf(options)
     Reflect.defineMetadata(OPTIONS_PROTO_STORE, store, optionsPrototype)
     Reflect.defineMetadata(OPTIONS_STORE, store, options)
     if (options.modules) {
@@ -116,7 +116,7 @@ export function setStoreOptionMetadata<S>(
     store: Store<S>,
     options: StoreOptions<S>
 ) {
-    const optionsPrototype = (options as any).constructor.prototype
+    const optionsPrototype = Object.getPrototypeOf(options)
     Reflect.defineMetadata(STORE_OPTIONS_PROTO, optionsPrototype, store)
     Reflect.defineMetadata(STORE_OPTIONS, options, store)
     defineStoreMetadata(store, options)
@@ -133,7 +133,7 @@ export function mergeModuleOptionMetadata<S>(
     store: Store<S>,
     options: Module<S, any>
 ) {
-    const optionsPrototype = (options as any).constructor.prototype
+    const optionsPrototype = Object.getPrototypeOf(options)
     mergeMetadata(STORE_OPTIONS_PROTO, optionsPrototype, store)
     mergeMetadata(STORE_OPTIONS, options, store)
     mergeMetadata(OPTIONS_PROTO_STORE, store, optionsPrototype)

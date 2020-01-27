@@ -5,27 +5,17 @@ import {
     getInstanceMetadata,
     ROOT_NS_KEY,
     getStoreFromOptionsPrototype,
-    createProxy,
-    getVuexKeyMap,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
 import { getActions } from './action'
-import { getStates } from './state'
+import { getStates, getStateKeys } from './state'
 import { getGetSets } from './getset'
 import { debounce } from 'lodash-es'
 import { getModels } from './model'
+import { defineMutation, defineState } from './define'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
-}
-
-const getAllKeys = (item: any) => {
-    let proto = Object.getPrototypeOf(item)
-    let props: string[] = []
-    do {
-        props.push(...Object.getOwnPropertyNames(proto))
-    } while ((proto = Object.getPrototypeOf(proto)))
-    return props
 }
 
 const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
@@ -34,14 +24,14 @@ const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
     return getModule(instance.constructor, namespace)
 }
 
-function transformSingleActionMethod(
+function transformInstanceActions(
     options: Module<any, any>,
     namespace: string | undefined = undefined
 ) {
     const targetOptions = namespace
         ? getOptions(options, namespace.split('/'))
         : options
-    const optionsPrototype = (targetOptions as any).constructor.prototype
+    const optionsPrototype = Object.getPrototypeOf(targetOptions)
     const actions = getActions(optionsPrototype)
     actions.forEach(({ propertyKey, options }) => {
         const actionFn = (targetOptions as any)[propertyKey] as Function
@@ -55,14 +45,14 @@ function transformSingleActionMethod(
     })
 }
 
-function transformSingleGetterMethods(
+function transformInstancesGetters(
     options: Module<any, any>,
     namespace: string | undefined = undefined
 ) {
     const targetOptions = namespace
         ? getOptions(options, namespace.split('/'))
         : options
-    const optionsPrototype = (targetOptions as any).constructor.prototype
+    const optionsPrototype = Object.getPrototypeOf(targetOptions)
     const getStore = () => getStoreFromOptionsPrototype(optionsPrototype)
     getGetters(optionsPrototype).forEach(getter => {
         const index = (namespace ? namespace + '/' : '') + getter.name
@@ -76,6 +66,90 @@ function transformSingleGetterMethods(
             }
         }
     })
+}
+
+function transformInstanceMutations(
+    rootOptions: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    const targetOptions = namespace
+        ? getOptions(rootOptions, namespace.split('/'))
+        : rootOptions
+    const prototype = Object.getPrototypeOf(targetOptions)
+    getMutations(prototype).forEach(key => {
+        defineMutation(targetOptions, key)
+    })
+}
+
+function transformInstanceGetSets(
+    rootOptions: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    const options = namespace
+        ? getOptions(rootOptions, namespace.split('/'))
+        : rootOptions
+    const prototype = Object.getPrototypeOf(options)
+
+    getGetSets(prototype).forEach(gs => {
+        ;(options as any)[gs.mutationName] = function(this: any, value: any) {
+            this[gs.key] = value
+        }
+        defineMutation(options, gs.mutationName)
+        defineState(gs.initialValue, options, gs.key)
+    })
+}
+
+function transformInstanceState(
+    rootOptions: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    const options = namespace
+        ? getOptions(rootOptions, namespace.split('/'))
+        : rootOptions
+    const prototype = Object.getPrototypeOf(options)
+    const stateProps = getStates(prototype)
+    stateProps.forEach(({ propertyKey, initialValue }) => {
+        defineState(initialValue, options, propertyKey)
+    })
+}
+
+function transformInstanceModels(
+    rootOptions: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    const options = namespace
+        ? getOptions(rootOptions, namespace.split('/'))
+        : rootOptions
+    const prototype = Object.getPrototypeOf(options)
+    getModels(prototype).forEach(
+        ({ initialValue, key, action, actionName, mutationName }) => {
+            ;(options as any)[mutationName] = function(this: any, value: any) {
+                this[key] = value
+            }
+            defineMutation(options, mutationName)
+            defineState(initialValue, options, key)
+            if (!options.actions) options.actions = {}
+            options.actions[actionName] = (
+                { dispatch, commit }: ActionContext<any, any>,
+                value: any
+            ) => {
+                commit(mutationName, value)
+                return dispatch(action)
+            }
+        }
+    )
+}
+
+function transformInstanceProps(
+    options: Module<any, any>,
+    namespace: string | undefined = undefined
+) {
+    transformInstanceState(options, namespace)
+    transformInstancesGetters(options, namespace)
+    transformInstanceActions(options, namespace)
+    transformInstanceMutations(options, namespace)
+    transformInstanceGetSets(options, namespace)
+    transformInstanceModels(options, namespace)
 }
 
 const getOptions = (options: Module<any, any>, path: string[]) => {
@@ -123,18 +197,8 @@ function transformModuleMethods(
     }
 
     const targetOptions = getOptions(options, path)
-    if (targetOptions.namespaced) {
-        const ns = path.join('/')
-        transformSingleGetterMethods(options, ns)
-        transformSingleActionMethod(options, ns)
-    } else {
-        const [parentOptions, parentNamespace] = getNamespaceParent(
-            options,
-            path
-        )
-        transformSingleGetterMethods(parentOptions, parentNamespace)
-        transformSingleActionMethod(parentOptions, parentNamespace)
-    }
+    const ns = path.join('/')
+    transformInstanceProps(options, ns)
 
     if (targetOptions.modules) {
         Object.keys(targetOptions.modules).forEach(key => {
@@ -144,8 +208,7 @@ function transformModuleMethods(
 }
 
 function transformInstanceMethods(options: Module<any, any>) {
-    transformSingleGetterMethods(options)
-    transformSingleActionMethod(options)
+    transformInstanceProps(options)
     transformModuleMethods(options, null)
 }
 
@@ -234,20 +297,20 @@ export function getModule<T>(
     getModels(optionsPrototype).forEach(m => {
         Object.defineProperty(anyInstance, m.key, {
             get: () => anyInstance[STATE_KEY][m.key],
-            set: value => {
-                return anyInstance[STORE_KEY].dispatch(
+            set: value =>
+                anyInstance[STORE_KEY].dispatch(
                     getPathedFn(m.actionName, anyInstance[NS_KEY]),
                     value
-                )
-            },
+                ),
         })
     })
 
-    getStates(optionsPrototype).forEach(stateKey => {
+    getStateKeys(optionsPrototype).forEach(stateKey => {
         Object.defineProperty(anyInstance, stateKey, {
             get: () => anyInstance[STATE_KEY][stateKey],
         })
     })
+
     getMutations(optionsPrototype).forEach(mut => {
         const mutation = getPathedFn(mut, anyInstance[NS_KEY])
         anyInstance[mut] = (...args: any[]) =>
