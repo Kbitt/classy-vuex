@@ -207,7 +207,7 @@ Mark methods as getters with the `getter` decorator. This is not a decorator fac
 
 ### `@getset`
 
-Syntax: `@getset<T>(mutationName?: string) foo!: T
+Syntax: `@getset<T>(mutationName?: string) foo = <value>`
 
 Mark properties with the `getset` decorator to generate both a state property and accompanying mutation. Properties marked with `getset` support both getting and setting of values directly to the property. Under the hood setting values invoke the generated mutation. This is a decorator factory, allowing optionally passing a mutation name to set for the generated mutation, otherwise a mutation name will be generated according to the pattern `SET_<KEY_NAME_TO_UPPER>`.
 
@@ -217,7 +217,25 @@ Syntax: `@model(action: string, mutationName?: string, actionName?: string)`
 
 Mark properties with the `model` decorator to generate a state property and setter mutation, just like `getset`, with an accompanying action that invokes a follow-up action after calling the mutation. Unlike `getset`, instead of immediately invoking the setter mutation when the property is set to a value, a generated action is invoked. This generated action invokes the method, and then invokes the action which name matches argument `action`, (this action must be defined separately). This is useful in situations where an action call always follows a mutation, for example when a property is bound to the value of a search box, and the search results should be retrieved whenever the value changes.
 
-###
+## Utility Functions
+
+### `getModule`
+
+Syntax: `getModule<T>(constructor: { new (...args: any[]): T }, namespace?: string, context?: any): T`
+
+`getModule` retrieves the instance of the module at the given namespace, or root if it is omitted. The resolved instance is validated with `instanceof` against the provided constructor and will throw an error if false, as this is a sign that the wrong namespace was supplied. The namespace may be a relative path, looking through parent or child modules. If the namespace is relative, a context module instance must be supplied (usually inside of a module action method, you would pass `this` as the context).
+
+### `mapComputed`
+
+Syntax: `mapComputed(constructor: { new (...args: any[]): T }, namespace?: string)`
+
+`mapComputed` takes a module constructor and optional namespace, and maps the resolved module to map of functions for the Vue `computed` options object. All of the instances of `state` and `getter` decorators result in computed getter functions. All of the uses of `getset` and `model` result in getter/setter computed properties (suitable for `v-model`).
+
+### `mapMethods`
+
+Syntax: `mapMethods(constructor: { new (...args: any[]): T }, namespace?: string)`
+
+Similar to `mapComputed` but for uses of the `action` and `mutation` decorators. This map should be used for the Vue `methods` option object.
 
 ## Notes
 
