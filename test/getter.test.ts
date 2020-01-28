@@ -23,6 +23,11 @@ class Test implements TestState {
     get double() {
         return 2 * this.value
     }
+
+    @getter
+    get isDivisibleBy() {
+        return (val: number) => this.value % val === 0
+    }
 }
 
 describe('getter.ts', () => {
@@ -47,7 +52,11 @@ describe('getter.ts', () => {
 
     test('getters get recorded', () => {
         const getters = getGetters(new Test())
-        expect(getters.length).toBe(2)
+        expect(getters.length).toBe(3)
         expect(getters[0].name).toBe('getNext')
+    })
+
+    test('getter as function', () => {
+        expect(mod.isDivisibleBy(2)).toBe(randomNumber % 2 === 0)
     })
 })
