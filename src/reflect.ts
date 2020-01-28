@@ -1,6 +1,11 @@
 import { Store, Module, StoreOptions } from 'vuex'
 
-function addToMetadataMap(metadataKey: any, target: any, key: any, value: any) {
+export function addToMetadataMap(
+    metadataKey: any,
+    target: any,
+    key: any,
+    value: any
+) {
     let map = Reflect.getOwnMetadata(metadataKey, target) as Map<any, any>
     if (!map) {
         map = Reflect.hasMetadata(metadataKey, target)
