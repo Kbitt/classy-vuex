@@ -164,4 +164,14 @@ describe('test module inheritance', () => {
         expect(a.a).toBe(anotherA(msg))
         expect(store.state.another.a).toBe(anotherA(msg))
     })
+
+    test('test using super class', () => {
+        const mod = getModule(BaseModule, 'sub')
+        const val = 'a test value'
+        mod.setA(val)
+
+        const sub = getModule(SubModule, 'sub')
+        expect(sub.a).toBe(val)
+        expect(store.state.sub.a).toBe(val)
+    })
 })
