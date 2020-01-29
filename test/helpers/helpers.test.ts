@@ -40,8 +40,6 @@ describe('helpers.ts', () => {
             transformKey: key => prefix + key,
         })
 
-        console.log(JSON.stringify(Object.keys(testComputed)))
-
         expect(Object.keys(testComputed).some(k => !k.startsWith(prefix))).toBe(
             false
         )

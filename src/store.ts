@@ -259,15 +259,12 @@ const getState = <S>(
     while (paths.length) {
         state = state[paths.shift() as string]
     }
+
     return state
 }
 
 const getPathedFn = (name: string, namespace: string | undefined = undefined) =>
     namespace && namespace !== ROOT_NS_KEY ? `${namespace}/${name}` : name
-
-const STORE_KEY = Symbol('STORE_KEY')
-const STATE_KEY = Symbol('STATE_KEY')
-const NS_KEY = Symbol('NAMESPACE_KEY')
 
 const checkValidNamespace = (parts: string[]) => {
     let childCount = 0
@@ -293,6 +290,74 @@ const checkValidNamespace = (parts: string[]) => {
                 'Invalid namespace, current/parent path operators only allowed at beginning of path'
             )
     })
+}
+
+const IS_PROCESSED = Symbol('IS_PROCESSED')
+
+function processModule(instance: any) {
+    if (instance[IS_PROCESSED]) return instance
+
+    instance[IS_PROCESSED] = true
+
+    const optionsPrototype = Object.getPrototypeOf(instance)
+    const _getStore = () => getStoreFromOptionsPrototype(optionsPrototype)
+    const _getNamespace = () => {
+        const ns =
+            getReverseInstanceMetadata(_getStore()).get(instance)?.path ??
+            undefined
+        return ns === ROOT_NS_KEY ? undefined : ns
+    }
+
+    const _getState = () => getState(_getStore(), _getNamespace())
+    const _getPathedFn = (fn: string) => getPathedFn(fn, _getNamespace())
+
+    getGetSets(optionsPrototype).forEach(gs => {
+        Object.defineProperty(instance, gs.key, {
+            get: () => _getState()[gs.key],
+            set: value => {
+                const type = _getPathedFn(gs.mutationName)
+                _getStore().commit(type, value)
+            },
+        })
+    })
+
+    getModels(optionsPrototype).forEach(m => {
+        Object.defineProperty(instance, m.key, {
+            get: () => _getState()[m.key],
+            set: value =>
+                _getStore().dispatch(_getPathedFn(m.actionName), value),
+        })
+    })
+
+    getStates(optionsPrototype).forEach(stateKey => {
+        Object.defineProperty(instance, stateKey, {
+            get: () => _getState()[stateKey],
+        })
+    })
+
+    getMutations(optionsPrototype).forEach(mutation => {
+        instance[mutation] = (...args: any[]) =>
+            _getStore().commit(_getPathedFn(mutation), ...args)
+    })
+
+    getActions(optionsPrototype).forEach(({ propertyKey: action }) => {
+        instance[action] = (...args: any[]) => {
+            return _getStore().dispatch(_getPathedFn(action), ...args)
+        }
+    })
+
+    getGetters(optionsPrototype).forEach(getter => {
+        const path = _getPathedFn(getter.name)
+        if (getter.isGetter) {
+            Object.defineProperty(instance, getter.name, {
+                get: () => _getStore().getters[path],
+            })
+        } else {
+            instance[getter.name] = () => _getStore().getters[path]
+        }
+    })
+
+    return instance
 }
 
 /** Retrieve the module of the given constructor at either the optional namespace or root.
@@ -358,69 +423,15 @@ export function getModule<T>(
         )
     const anyInstance = instance as any
 
-    if (anyInstance[STORE_KEY]) return instance as T
-
-    anyInstance[NS_KEY] = namespace
-
-    anyInstance[STORE_KEY] = store
-
-    Object.defineProperty(anyInstance, STATE_KEY, {
-        get: () => getState(anyInstance[STORE_KEY], anyInstance[NS_KEY]),
-    })
-
-    getGetSets(optionsPrototype).forEach(gs => {
-        Object.defineProperty(anyInstance, gs.key, {
-            get: () => anyInstance[STATE_KEY][gs.key],
-            set: value => {
-                const type = getPathedFn(gs.mutationName, anyInstance[NS_KEY])
-                anyInstance[STORE_KEY].commit(type, value)
-            },
-        })
-    })
-
-    getModels(optionsPrototype).forEach(m => {
-        Object.defineProperty(anyInstance, m.key, {
-            get: () => anyInstance[STATE_KEY][m.key],
-            set: value =>
-                anyInstance[STORE_KEY].dispatch(
-                    getPathedFn(m.actionName, anyInstance[NS_KEY]),
-                    value
-                ),
-        })
-    })
-
-    getStates(optionsPrototype).forEach(stateKey => {
-        Object.defineProperty(anyInstance, stateKey, {
-            get: () => anyInstance[STATE_KEY][stateKey],
-        })
-    })
-
-    getMutations(optionsPrototype).forEach(mut => {
-        const mutation = getPathedFn(mut, anyInstance[NS_KEY])
-        anyInstance[mut] = (...args: any[]) =>
-            anyInstance[STORE_KEY].commit(mutation, ...args)
-    })
-
-    getActions(optionsPrototype).forEach(({ propertyKey: action }) => {
-        anyInstance[action] = (...args: any[]) => {
-            const actionPath = getPathedFn(action, anyInstance[NS_KEY])
-            return anyInstance[STORE_KEY].dispatch(actionPath, ...args)
-        }
-    })
-
-    getGetters(optionsPrototype).forEach(getter => {
-        const path = getPathedFn(getter.name, anyInstance[NS_KEY])
-        if (getter.isGetter) {
-            Object.defineProperty(anyInstance, getter.name, {
-                get: () => anyInstance[STORE_KEY].getters[path],
+    if (anyInstance.modules && Object.keys(anyInstance.modules)) {
+        Object.entries(anyInstance.modules).forEach(([key, value]) => {
+            Object.defineProperty(anyInstance.modules, key, {
+                get: () => processModule(value),
             })
-        } else {
-            anyInstance[getter.name] = () =>
-                anyInstance[STORE_KEY].getters[path]
-        }
-    })
+        })
+    }
 
-    return instance as T
+    return processModule(anyInstance)
 }
 
 export function createClassModule<T>(

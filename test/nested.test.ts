@@ -5,11 +5,14 @@ import { getInstanceMetadata } from '../src/reflect'
 
 interface AState {
     a: string
+    b: BState
 }
 
 class A implements AState {
     @getset()
     a = 'a'
+
+    b!: BState
 
     modules = {
         b: new B(),
@@ -94,5 +97,18 @@ describe('test nested namespaced modules', () => {
         const b = getModule(B, 'b')
         const c = getModule(C, './c', b)
         expect(c.c).toBe('c')
+    })
+
+    it('access submodule state directly', () => {
+        const a = getModule(A)
+        expect(a.modules.b.b).toBe('b')
+    })
+
+    it('access submodule methods directly', () => {
+        const a = getModule(A)
+        const val = 'NOT THE DEFAULT B VALUE'
+        a.modules.b.b = val
+        expect(a.modules.b.b).toBe(val)
+        expect(store.state.b.b).toBe(val)
     })
 })
