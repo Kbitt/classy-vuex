@@ -153,6 +153,21 @@ class Data {
 }
 ```
 
+Or by accessing the sub module directly
+
+```typescript
+class Foo {
+    @action()
+    fooAction() {
+        // use the bar submodule
+        this.modules.bar.barAction()
+    }
+    modules = {
+        bar: new Bar(),
+    }
+}
+```
+
 Access modules inside Vue component methods:
 
 ```typescript
