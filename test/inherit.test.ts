@@ -174,4 +174,9 @@ describe('test module inheritance', () => {
         expect(sub.a).toBe(val)
         expect(store.state.sub.a).toBe(val)
     })
+
+    test('test using Object', () => {
+        const obj = getModule(Object, 'sub')
+        expect(obj instanceof SubModule).toBe(true)
+    })
 })

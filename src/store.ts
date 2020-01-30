@@ -300,7 +300,8 @@ function processModule(instance: any) {
     instance[IS_PROCESSED] = true
 
     const optionsPrototype = Object.getPrototypeOf(instance)
-    const _getStore = () => getStoreFromOptionsPrototype(optionsPrototype)
+    const _getStore = () =>
+        getStoreFromOptionsPrototype(optionsPrototype) ?? _store
     const _getNamespace = () => {
         const ns =
             getReverseInstanceMetadata(_getStore()).get(instance)?.path ??
@@ -369,7 +370,7 @@ export function getModule<T>(
     context?: any | undefined
 ): T {
     const optionsPrototype = ctor.prototype
-    const store = getStoreFromOptionsPrototype(optionsPrototype)
+    const store = getStoreFromOptionsPrototype(optionsPrototype) ?? _store
     if (namespace && namespace.startsWith('.')) {
         if (!context) {
             throw new Error(
