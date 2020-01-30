@@ -185,6 +185,8 @@ Register modules dynamically
 
 ```typescript
 store.registerModule('myModule', new MyModule() as any) // may need to cast to any, since class module won't satisfy the vuex Module interface
+// or
+registerModule('myModule', new MyModule()) // accepts any for input module
 
 // works
 const mymodule = getModule(MyModule, 'myModule')

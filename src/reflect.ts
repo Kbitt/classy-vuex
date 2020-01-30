@@ -17,6 +17,12 @@ export function addToMetadataMap(
     map.set(key, value)
 }
 
+export function removeFromMetadataMap(metadataKey: any, target: any, key: any) {
+    let map = Reflect.getOwnMetadata(metadataKey, target) as Map<any, any>
+    if (!map) return
+    map.delete(key)
+}
+
 export function addToMetadataCollection(
     metadataKey: any,
     target: any,
@@ -92,6 +98,17 @@ export function setInstanceMetadata(
             )
         })
     }
+}
+
+export function removeInstanceMetadata(store: Store<any>, namespace: string) {
+    const options = getInstanceMetadata(store).get(namespace)!.instance
+    if (options.modules) {
+        Object.keys(options.modules).forEach(key => {
+            removeInstanceMetadata(store, namespace + '/' + key)
+        })
+    }
+    removeFromMetadataMap(OPTIONS_NS_TO_INSTANCE, store, namespace)
+    removeFromMetadataMap(OPTIONS_INSTANCE_TO_NS, store, options)
 }
 
 export function getInstanceMetadata(

@@ -5,7 +5,13 @@ export { mutation, getMutations } from './mutation'
 export { state, getStates } from './state'
 export * from './model'
 import { ModuleCtor, getModule } from './store'
-export { getModule, classModule, createStore } from './store'
+export {
+    getModule,
+    classModule,
+    createStore,
+    registerModule,
+    unregisterModule,
+} from './store'
 export * from './helpers'
 
 declare module 'vue/types/vue' {

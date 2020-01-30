@@ -7,6 +7,7 @@ import {
     getStoreFromOptionsPrototype,
     getReverseInstanceMetadata,
     setInstanceMetadata,
+    removeInstanceMetadata,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
@@ -262,6 +263,47 @@ export function classModule<S extends {} = any>(ctor: {
                 super.registerModule(path, module, options)
             }
         }
+        unregisterModule(path: string): void
+        unregisterModule(path: string[]): void
+        unregisterModule(path: string | string[]) {
+            removeInstanceMetadata(
+                this,
+                typeof path === 'string' ? path : path.join('/')
+            )
+            if (typeof path === 'string') {
+                super.unregisterModule(path)
+            } else {
+                super.unregisterModule(path)
+            }
+        }
+    }
+}
+
+export function isRegistered(namespace: string) {
+    return getInstanceMetadata(_store).has(namespace)
+}
+
+export function unregisterModule(path: string | string[]) {
+    if (typeof path === 'string') {
+        _store.unregisterModule(path)
+    } else {
+        _store.unregisterModule(path)
+    }
+}
+
+export function registerModule(
+    path: string | string[],
+    module: any,
+    options?: ModuleOptions | undefined
+) {
+    if (typeof path === 'string') {
+        _store.registerModule(
+            typeof path === 'string' ? path : path,
+            module,
+            options
+        )
+    } else {
+        _store.registerModule(path, module, options)
     }
 }
 

@@ -1,6 +1,12 @@
 import './_init'
 import { Store } from 'vuex'
-import { getModule, createStore } from '../src/store'
+import {
+    getModule,
+    createStore,
+    registerModule,
+    isRegistered,
+    unregisterModule,
+} from '../src/store'
 import { getter } from '../src/getter'
 import { getStoreFromOptions, getOptionsFromStore } from '../src/reflect'
 import { mutation } from '../src/mutation'
@@ -108,5 +114,36 @@ describe('state.ts', () => {
         foo2.foo = CHANGED_FOO
         expect((store.state as any).foo2.foo).toBe(CHANGED_FOO)
         expect(foo2.foo).toBe(CHANGED_FOO)
+    })
+
+    test('register with path array', () => {
+        const ns = ['foo', 'boo']
+        registerModule(ns, new Unregistered())
+        expect((store.state as any).foo.boo.foo).toBe(INIT_FOO)
+        expect(isRegistered(ns.join('/'))).toBe(true)
+    })
+
+    test('isRegistered', () => {
+        expect(isRegistered('foo')).toBe(true)
+        const ns = 'ABXYZ'
+        registerModule(ns, new Unregistered())
+        expect(isRegistered(ns)).toBe(true)
+    })
+
+    test('unregisterModule', () => {
+        const ns = 'ABXYZ'
+        registerModule(ns, new Unregistered())
+        expect(isRegistered(ns)).toBe(true)
+        unregisterModule(ns)
+        expect(isRegistered(ns)).toBe(false)
+    })
+
+    test('unregisterModule nested module', () => {
+        const ns = ['foo', 'boo']
+        registerModule(ns, new Unregistered())
+        expect((store.state as any).foo.boo.foo).toBe(INIT_FOO)
+        expect(isRegistered(ns.join('/'))).toBe(true)
+        unregisterModule(ns)
+        expect(isRegistered(ns.join('/'))).toBe(false)
     })
 })
