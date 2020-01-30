@@ -1,4 +1,4 @@
-import { Module, StoreOptions, Store, ActionContext } from 'vuex'
+import { Module, StoreOptions, Store, ActionContext, ModuleOptions } from 'vuex'
 import {
     setStoreOptionMetadata,
     isNewable,
@@ -6,6 +6,7 @@ import {
     ROOT_NS_KEY,
     getStoreFromOptionsPrototype,
     getReverseInstanceMetadata,
+    setInstanceMetadata,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
@@ -233,6 +234,34 @@ export function classModule<S extends {} = any>(ctor: {
             }
             setStoreOptionMetadata(this, options)
         }
+
+        registerModule<T>(
+            path: string,
+            module: Module<T, S>,
+            options?: ModuleOptions | undefined
+        ): void
+        registerModule<T>(
+            path: string[],
+            module: Module<T, S>,
+            options?: ModuleOptions | undefined
+        ): void
+        registerModule<T>(
+            path: string | string[],
+            module: Module<T, S>,
+            options?: ModuleOptions | undefined
+        ) {
+            transformInstanceMethods(module)
+            setInstanceMetadata(
+                this,
+                module,
+                typeof path === 'string' ? path : path.join('/')
+            )
+            if (typeof path === 'string') {
+                super.registerModule(path, module, options)
+            } else {
+                super.registerModule(path, module, options)
+            }
+        }
     }
 }
 
@@ -244,7 +273,7 @@ export function createStore<S extends {}, T extends S>(
 ): Store<S> {
     const superClass = classModule(Store)
     const options = isNewable(ctor) ? new ctor(...args) : ctor
-    const storeOptions = createClassModule(() => options) as StoreOptions<S>
+    const storeOptions = createClassModule(options) as StoreOptions<S>
     transformInstanceMethods(storeOptions)
     return (_store = new superClass(storeOptions))
 }

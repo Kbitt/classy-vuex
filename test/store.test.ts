@@ -5,6 +5,7 @@ import { getter } from '../src/getter'
 import { getStoreFromOptions, getOptionsFromStore } from '../src/reflect'
 import { mutation } from '../src/mutation'
 import { state } from '../src/state'
+import { getset } from '../src'
 
 interface TestState {
     value: number
@@ -50,6 +51,16 @@ class Test implements TestState {
     }
 }
 
+const INIT_FOO = 'init foo'
+interface UnregisteredState {
+    foo: string
+}
+
+class Unregistered implements UnregisteredState {
+    @getset()
+    foo = INIT_FOO
+}
+
 describe('state.ts', () => {
     let options: Test
     let store: Store<TestState>
@@ -85,5 +96,17 @@ describe('state.ts', () => {
 
     test('test unnamespaced getter does not work', () => {
         expect(store.getters['foo/inner/getSomething']).toBe('whatever20202')
+    })
+
+    test('dynamic registration', () => {
+        store.registerModule('foo2', new Unregistered() as any)
+        expect((store.state as any).foo2.foo).toBe(INIT_FOO)
+        const foo2 = getModule(Unregistered, 'foo2')
+        expect(!foo2).toBe(false)
+        expect(foo2.foo).toBe(INIT_FOO)
+        const CHANGED_FOO = 'changed foo'
+        foo2.foo = CHANGED_FOO
+        expect((store.state as any).foo2.foo).toBe(CHANGED_FOO)
+        expect(foo2.foo).toBe(CHANGED_FOO)
     })
 })

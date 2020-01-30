@@ -73,7 +73,7 @@ type InstanceMetadata = { instance: any; path: string | null }
 
 export const ROOT_NS_KEY = '<root>'
 
-function setInstanceMetadata(
+export function setInstanceMetadata(
     store: Store<any>,
     options: Module<any, any>,
     namespace = ROOT_NS_KEY

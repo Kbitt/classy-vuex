@@ -181,6 +181,15 @@ export default {
 }
 ```
 
+Register modules dynamically
+
+```typescript
+store.registerModule('myModule', new MyModule() as any) // may need to cast to any, since class module won't satisfy the vuex Module interface
+
+// works
+const mymodule = getModule(MyModule, 'myModule')
+```
+
 Easily map an entire module to a Vue component:
 
 ```typescript
