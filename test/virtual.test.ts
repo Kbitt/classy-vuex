@@ -64,7 +64,7 @@ class Foo implements FooState {
         this._value = value
     }
 
-    @virtual(['_value', 'state'], ['setValue', 'action'])
+    @virtual('_value', 'setValue')
     value!: { text: string }
 }
 

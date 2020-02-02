@@ -384,7 +384,8 @@ function processModule(instance: any) {
     const _getState = () => getState(_getStore(), _getNamespace())
     const _getPathedFn = (fn: string) => getPathedFn(fn, _getNamespace())
 
-    getGetSets(optionsPrototype).forEach(gs => {
+    const getSets = getGetSets(optionsPrototype)
+    getSets.forEach(gs => {
         Object.defineProperty(instance, gs.key, {
             get: () => _getState()[gs.key],
             set: value => {
@@ -394,7 +395,9 @@ function processModule(instance: any) {
         })
     })
 
-    getModels(optionsPrototype).forEach(m => {
+    const models = getModels(optionsPrototype)
+
+    models.forEach(m => {
         Object.defineProperty(instance, m.key, {
             get: () => _getState()[m.key],
             set: value =>
@@ -402,24 +405,32 @@ function processModule(instance: any) {
         })
     })
 
-    getStates(optionsPrototype).forEach(stateKey => {
+    const stateKeys = getStates(optionsPrototype)
+
+    stateKeys.forEach(stateKey => {
         Object.defineProperty(instance, stateKey, {
             get: () => _getState()[stateKey],
         })
     })
 
-    getMutations(optionsPrototype).forEach(mutation => {
+    const mutations = getMutations(optionsPrototype)
+
+    mutations.forEach(mutation => {
         instance[mutation] = (...args: any[]) =>
             _getStore().commit(_getPathedFn(mutation), ...args)
     })
 
-    getActions(optionsPrototype).forEach(({ propertyKey: action }) => {
+    const actions = getActions(optionsPrototype)
+
+    actions.forEach(({ propertyKey: action }) => {
         instance[action] = (...args: any[]) => {
             return _getStore().dispatch(_getPathedFn(action), ...args)
         }
     })
 
-    getGetters(optionsPrototype).forEach(getter => {
+    const getters = getGetters(optionsPrototype)
+
+    getters.forEach(getter => {
         const path = _getPathedFn(getter.name)
         if (getter.isGetter) {
             Object.defineProperty(instance, getter.name, {
@@ -431,20 +442,39 @@ function processModule(instance: any) {
     })
 
     getVirtuals(optionsPrototype).forEach(
-        ({ propertyKey, getterName, getterType, setterName, setterType }) => {
+        ({ propertyKey, getter: getterName, setter: setterName }) => {
             let getter: () => any
             let setter: (data: any) => void
             const setterPath = _getPathedFn(setterName)
-            if (getterType === 'getter') {
+            if (getters.some(gs => gs.name === getterName)) {
                 const path = _getPathedFn(getterName)
                 getter = () => _getStore().getters[path]
-            } else {
+            } else if (
+                stateKeys.includes(getterName) ||
+                getSets.some(gs => gs.key === getterName) ||
+                models.some(m => m.key === getterName)
+            ) {
                 getter = () => _getState()[getterName]
-            }
-            if (setterType === 'mutation') {
-                setter = data => _getStore().commit(setterPath, data)
             } else {
+                throw new Error(
+                    `@virtual property was configured with getter name: ${getterName} which is not a defined state property or getter`
+                )
+            }
+            if (
+                mutations.includes(setterName) ||
+                getSets.some(gs => gs.mutationName === setterName) ||
+                models.some(m => m.mutationName === setterName)
+            ) {
+                setter = data => _getStore().commit(setterPath, data)
+            } else if (
+                actions.some(a => a.propertyKey === setterName) ||
+                models.some(m => m.actionName === setterName)
+            ) {
                 setter = data => _getStore().dispatch(setterPath, data)
+            } else {
+                throw new Error(
+                    `@virtual property was configured with setter name: ${setterName} which is not a defined action or mutation`
+                )
             }
             Object.defineProperty(instance, propertyKey, {
                 get: getter,
