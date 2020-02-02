@@ -17,6 +17,7 @@ import { getGetSets } from './getset'
 import { debounce } from 'lodash-es'
 import { getModels } from './model'
 import { defineMutation, defineState } from './define'
+import { getVirtuals } from './virtual'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
 }
@@ -428,6 +429,29 @@ function processModule(instance: any) {
             instance[getter.name] = () => _getStore().getters[path]
         }
     })
+
+    getVirtuals(optionsPrototype).forEach(
+        ({ propertyKey, getterName, getterType, setterName, setterType }) => {
+            let getter: () => any
+            let setter: (data: any) => void
+            const setterPath = _getPathedFn(setterName)
+            if (getterType === 'getter') {
+                const path = _getPathedFn(getterName)
+                getter = () => _getStore().getters[path]
+            } else {
+                getter = () => _getState()[getterName]
+            }
+            if (setterType === 'mutation') {
+                setter = data => _getStore().commit(setterPath, data)
+            } else {
+                setter = data => _getStore().dispatch(setterPath, data)
+            }
+            Object.defineProperty(instance, propertyKey, {
+                get: getter,
+                set: setter,
+            })
+        }
+    )
 
     return instance
 }

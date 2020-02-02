@@ -243,6 +243,16 @@ Syntax: `@model(action: string, mutationName?: string, actionName?: string)`
 
 Mark properties with the `model` decorator to generate a state property and setter mutation, just like `getset`, with an accompanying action that invokes a follow-up action after calling the mutation. Unlike `getset`, instead of immediately invoking the setter mutation when the property is set to a value, a generated action is invoked. This generated action invokes the method, and then invokes the action which name matches argument `action`, (this action must be defined separately). This is useful in situations where an action call always follows a mutation, for example when a property is bound to the value of a search box, and the search results should be retrieved whenever the value changes.
 
+### `@virtual`
+
+Syntax: `@virtual(getter: string | [string, 'getter' | 'state'], setter: string | [string, 'mutation' | 'action'])`
+
+Mark properties with the `virtual` decorator to create simulated/computed properties that can get and set their values from/to various sources in the module. This does not create anything new in the vuex module, but instead creates a property on module class instance that allows for complex get and set behavior from a simple property interface. This is much like the `model` decorator, but without any internal mutation/action generation and with much more control.
+
+`virtual` is a decorator factory, and takes 2 arguments: configuration for the getter and configuration for the setter. The getter configuration accepts an array, the first item being the name of a getter or state property defined on the module, with the second argument being either 'state' or 'getter' to denote which type. The name can be passed alone and it will default to the 'getter' type. The setter is similar, pass an array with the name as the first position and type, either an 'action' or 'mutation' as the second. Pass just the string name for the setter and it will default to 'mutation'.
+
+It's recommended to define virtual properties with non-null assertions, like: `@virtual(/***/) foo!: number`. There is no type assertions to verify that types are kept consisten; for example using `virtual` with a getter that returns a number and a mutation that accepts an object will lead to unexpected behavior. It's best to keep the getter return types and setter argument types consistent, or utilize union types on the virtual property appropriately.
+
 ## Utility Functions
 
 ### `getModule`
