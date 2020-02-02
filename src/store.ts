@@ -44,10 +44,32 @@ function transformInstanceActions(
     actions.forEach(({ propertyKey, options }) => {
         const actionFn = (targetOptions as any)[propertyKey] as Function
         targetOptions.actions = targetOptions.actions || {}
-        let fn = (_: ActionContext<any, any>, payload: any) =>
+        let fn = (ctx: ActionContext<any, any>, payload: any) =>
             actionFn.call(getInstance(optionsPrototype, namespace), payload)
         if (typeof options.debounce === 'number') {
-            fn = debounce(fn, options.debounce)
+            let promise: Promise<any> | null = null
+            let resolvePromise: (() => void) | null = null
+            const actionFn = fn
+
+            const dbfn = debounce(
+                (ctx: ActionContext<any, any>, payload: any) => {
+                    Promise.resolve(actionFn(ctx, payload)).then(() => {
+                        resolvePromise && resolvePromise()
+                        promise = null
+                        resolvePromise = null
+                    })
+                },
+                options.debounce
+            )
+            fn = (ctx: ActionContext<any, any>, payload: any) => {
+                if (!promise) {
+                    promise = new Promise(resolve => {
+                        resolvePromise = resolve
+                    })
+                }
+                dbfn(ctx, payload)
+                return promise
+            }
         }
         targetOptions.actions[propertyKey] = fn
     })

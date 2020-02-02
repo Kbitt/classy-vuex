@@ -11,6 +11,7 @@ interface TestState {
     value: number
     debouncedCalled: number
     debounceCheck: string
+    debounceAwaited: number
 }
 
 const randomNumber = Math.floor(Math.random() * 1000)
@@ -22,6 +23,14 @@ class Test implements TestState, Module<TestState, any> {
 
     @getset()
     debouncedCalled = 0
+
+    @getset()
+    debounceAwaited = 0
+
+    @mutation
+    incDebounce() {
+        this.debounceAwaited++
+    }
 
     @getset()
     debounceCheck = ''
@@ -44,6 +53,7 @@ class Test implements TestState, Module<TestState, any> {
     @action({ debounce: 100 })
     debouncedAction() {
         this.debouncedCalled++
+        return Promise.resolve()
     }
 
     @mutation
@@ -120,11 +130,63 @@ describe('action.ts', () => {
         expect(store.state.debouncedCalled).toBe(1)
     })
 
+    it('all debounced action promises resolve', async () => {
+        store.dispatch('debouncedAction').then(() => {
+            store.commit('incDebounce')
+        })
+        await wait(10)
+        store.dispatch('debouncedAction').then(() => {
+            store.commit('incDebounce')
+        })
+        await wait(10)
+        await store.dispatch('debouncedAction').then(() => {
+            store.commit('incDebounce')
+        })
+        expect(store.state.debounceAwaited).toBe(3)
+        expect(store.state.debouncedCalled).toBe(1)
+    })
+
     it('debounced action is debounced w/ class', async () => {
         mod.debouncedAction()
         await wait(10)
         mod.debouncedAction()
         await wait(120)
         expect(mod.debouncedCalled).toBe(1)
+    })
+
+    it('all debounced action promises resolve w/ class and repeat', async () => {
+        mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+        await wait(10)
+        mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+        await wait(10)
+        await mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+
+        expect(mod.debounceAwaited).toBe(3)
+        expect(mod.debouncedCalled).toBe(1)
+        expect(store.state.debounceAwaited).toBe(3)
+        expect(store.state.debouncedCalled).toBe(1)
+
+        mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+        await wait(10)
+        mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+        await wait(10)
+        await mod.debouncedAction().then(() => {
+            mod.incDebounce()
+        })
+
+        expect(mod.debounceAwaited).toBe(6)
+        expect(mod.debouncedCalled).toBe(2)
+        expect(store.state.debounceAwaited).toBe(6)
+        expect(store.state.debouncedCalled).toBe(2)
     })
 })
