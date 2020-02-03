@@ -2,7 +2,7 @@ import './_init'
 import { getter, getGetters } from '../src/getter'
 import { Store } from 'vuex'
 import { state } from '../src/state'
-import { createStore, getModule } from '../src'
+import { createStore, getModule, getset, action, model } from '../src'
 
 interface TestState {
     value: number
@@ -13,6 +13,22 @@ const randomNumber = Math.floor(Math.random() * 1000)
 class Test implements TestState {
     @state
     value = randomNumber
+
+    @getset()
+    n = 1
+
+    @model('fooAction')
+    i = 111
+
+    @getter
+    get getN() {
+        return this.n
+    }
+
+    @getter
+    get getI() {
+        return this.i
+    }
 
     @getter
     getNext() {
@@ -38,6 +54,11 @@ class Test implements TestState {
     get quadruple() {
         return this.get2() * this.double
     }
+
+    @action()
+    fooAction() {
+        return Promise.resolve()
+    }
 }
 
 describe('getter.ts', () => {
@@ -62,8 +83,7 @@ describe('getter.ts', () => {
 
     test('getters get recorded', () => {
         const getters = getGetters(new Test())
-        expect(getters.length).toBe(5)
-        expect(getters[0].name).toBe('getNext')
+        expect(getters.length).toBe(7)
     })
 
     test('getter as function', () => {
@@ -72,5 +92,13 @@ describe('getter.ts', () => {
 
     test('call another getter', () => {
         expect(mod.quadruple).toBe(randomNumber * 4)
+    })
+
+    test('use state defined with getset', () => {
+        expect(mod.getI).toBe(mod.i)
+    })
+
+    test('use state defined with model', () => {
+        expect(mod.getN).toBe(mod.n)
     })
 })
