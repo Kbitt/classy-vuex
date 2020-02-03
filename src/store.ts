@@ -75,7 +75,7 @@ function transformInstanceActions(
     })
 }
 
-function transformInstancesGetters(
+function transformInstanceGetters(
     options: Module<any, any>,
     namespace: string | undefined = undefined
 ) {
@@ -88,6 +88,7 @@ function transformInstancesGetters(
         const index = (namespace ? namespace + '/' : '') + getter.name
         if (getter.isGetter) {
             Object.defineProperty(optionsPrototype, getter.name, {
+                configurable: true,
                 get: () => getStore().getters[index],
             })
         } else {
@@ -175,7 +176,7 @@ function transformInstanceProps(
     namespace: string | undefined = undefined
 ) {
     transformInstanceState(options, namespace)
-    transformInstancesGetters(options, namespace)
+    transformInstanceGetters(options, namespace)
     transformInstanceActions(options, namespace)
     transformInstanceMutations(options, namespace)
     transformInstanceGetSets(options, namespace)
@@ -409,6 +410,7 @@ function processModule(instance: any) {
     const getSets = getGetSets(optionsPrototype)
     getSets.forEach(gs => {
         Object.defineProperty(instance, gs.key, {
+            configurable: true,
             get: () => _getState()[gs.key],
             set: value => {
                 const type = _getPathedFn(gs.mutationName)
@@ -421,6 +423,7 @@ function processModule(instance: any) {
 
     models.forEach(m => {
         Object.defineProperty(instance, m.key, {
+            configurable: true,
             get: () => _getState()[m.key],
             set: value =>
                 _getStore().dispatch(_getPathedFn(m.actionName), value),
@@ -431,6 +434,7 @@ function processModule(instance: any) {
 
     stateKeys.forEach(stateKey => {
         Object.defineProperty(instance, stateKey, {
+            configurable: true,
             get: () => _getState()[stateKey],
         })
     })
@@ -456,6 +460,7 @@ function processModule(instance: any) {
         const path = _getPathedFn(getter.name)
         if (getter.isGetter) {
             Object.defineProperty(instance, getter.name, {
+                configurable: true,
                 get: () => _getStore().getters[path],
             })
         } else {
@@ -499,6 +504,7 @@ function processModule(instance: any) {
                 )
             }
             Object.defineProperty(instance, propertyKey, {
+                configurable: true,
                 get: getter,
                 set: setter,
             })
@@ -574,6 +580,7 @@ export function getModule<T>(
     if (anyInstance.modules && Object.keys(anyInstance.modules)) {
         Object.entries(anyInstance.modules).forEach(([key, value]) => {
             Object.defineProperty(anyInstance.modules, key, {
+                configurable: true,
                 get: () => processModule(value),
             })
         })

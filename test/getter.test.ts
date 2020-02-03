@@ -4,18 +4,26 @@ import { Store } from 'vuex'
 import { state } from '../src/state'
 import { createStore, getModule, getset, action, model } from '../src'
 
-interface TestState {
+export interface TestState {
     value: number
+    n: number
+    n2: number
 }
 
 const randomNumber = Math.floor(Math.random() * 1000)
 
-class Test implements TestState {
+export class Test implements TestState {
+    constructor() {
+        this.n2 = 2
+    }
     @state
     value = randomNumber
 
     @getset()
     n = 1
+
+    @getset()
+    n2: number
 
     @model('fooAction')
     i = 111
@@ -23,6 +31,11 @@ class Test implements TestState {
     @getter
     get getN() {
         return this.n
+    }
+
+    @getter
+    get getN2() {
+        return this.n2
     }
 
     @getter
@@ -83,7 +96,7 @@ describe('getter.ts', () => {
 
     test('getters get recorded', () => {
         const getters = getGetters(new Test())
-        expect(getters.length).toBe(7)
+        expect(getters.length).toBe(8)
     })
 
     test('getter as function', () => {
@@ -100,5 +113,9 @@ describe('getter.ts', () => {
 
     test('use state defined with model', () => {
         expect(mod.getN).toBe(mod.n)
+    })
+
+    test('use constructor set state w/ getter', () => {
+        expect(mod.getN2).toBe(mod.n2)
     })
 })

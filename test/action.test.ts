@@ -7,7 +7,7 @@ import { createStore, getModule, getset } from '../src'
 import { state } from '../src/state'
 import { wait } from './_init'
 
-interface TestState {
+export interface TestState {
     value: number
     debouncedCalled: number
     debounceCheck: string
@@ -16,7 +16,7 @@ interface TestState {
 
 const randomNumber = Math.floor(Math.random() * 1000)
 
-class Test implements TestState, Module<TestState, any> {
+export class Test implements TestState, Module<TestState, any> {
     state!: TestState
     @state
     value = 0
