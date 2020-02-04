@@ -23,8 +23,7 @@ export type ModuleCtor<T> = {
 }
 
 const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
-    const store = getStoreFromOptionsPrototype(target)
-    const metadata = getInstanceMetadata(store).get(namespace)
+    const metadata = getInstanceMetadata(_store).get(namespace)
     if (!metadata)
         throw new Error(
             'Could not retrieve metadata for namespace: ' + namespace
@@ -32,21 +31,21 @@ const getInstance = (target: any, namespace = ROOT_NS_KEY) => {
     return getModule(metadata.instance.constructor, namespace)
 }
 
-function transformInstanceActions(
-    options: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const targetOptions = namespace
-        ? getOptions(options, namespace.split('/'))
-        : options
-    const optionsPrototype = Object.getPrototypeOf(targetOptions)
+const convertToNamespace = (path?: string[]): string | undefined =>
+    path ? path.join('/') : undefined
+
+function transformInstanceActions(options: Module<any, any>, path?: string[]) {
+    const namespace = convertToNamespace(path)
+    const optionsPrototype = Object.getPrototypeOf(options)
     const actions = getActions(optionsPrototype)
-    actions.forEach(({ propertyKey, options }) => {
-        const actionFn = (targetOptions as any)[propertyKey] as Function
-        targetOptions.actions = targetOptions.actions || {}
-        let fn = (ctx: ActionContext<any, any>, payload: any) =>
-            actionFn.call(getInstance(optionsPrototype, namespace), payload)
-        if (typeof options.debounce === 'number') {
+    actions.forEach(({ propertyKey, options: actionOptions }) => {
+        const actionFn = (options as any)[propertyKey] as Function
+        options.actions = options.actions || {}
+        let fn = (ctx: ActionContext<any, any>, payload: any) => {
+            const instance = getInstance(optionsPrototype, namespace)
+            return actionFn.call(instance, payload)
+        }
+        if (typeof actionOptions.debounce === 'number') {
             let promise: Promise<any> | null = null
             let resolvePromise: (() => void) | null = null
             const actionFn = fn
@@ -59,7 +58,7 @@ function transformInstanceActions(
                         resolvePromise = null
                     })
                 },
-                options.debounce
+                actionOptions.debounce
             )
             fn = (ctx: ActionContext<any, any>, payload: any) => {
                 if (!promise) {
@@ -71,18 +70,13 @@ function transformInstanceActions(
                 return promise
             }
         }
-        targetOptions.actions[propertyKey] = fn
+        options.actions[propertyKey] = fn
     })
 }
 
-function transformInstanceGetters(
-    options: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const targetOptions = namespace
-        ? getOptions(options, namespace.split('/'))
-        : options
-    const optionsPrototype = Object.getPrototypeOf(targetOptions)
+function transformInstanceGetters(options: Module<any, any>, path?: string[]) {
+    const namespace = convertToNamespace(path)
+    const optionsPrototype = Object.getPrototypeOf(options)
     const getStore = () => getStoreFromOptionsPrototype(optionsPrototype)
     getGetters(optionsPrototype).forEach(getter => {
         const index = (namespace ? namespace + '/' : '') + getter.name
@@ -99,26 +93,14 @@ function transformInstanceGetters(
     })
 }
 
-function transformInstanceMutations(
-    rootOptions: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const targetOptions = namespace
-        ? getOptions(rootOptions, namespace.split('/'))
-        : rootOptions
+function transformInstanceMutations(targetOptions: Module<any, any>) {
     const prototype = Object.getPrototypeOf(targetOptions)
     getMutations(prototype).forEach(key => {
         defineMutation(targetOptions, key)
     })
 }
 
-function transformInstanceGetSets(
-    rootOptions: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const options = namespace
-        ? getOptions(rootOptions, namespace.split('/'))
-        : rootOptions
+function transformInstanceGetSets(options: Module<any, any>) {
     const prototype = Object.getPrototypeOf(options)
 
     getGetSets(prototype).forEach(gs => {
@@ -130,13 +112,7 @@ function transformInstanceGetSets(
     })
 }
 
-function transformInstanceState(
-    rootOptions: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const options = namespace
-        ? getOptions(rootOptions, namespace.split('/'))
-        : rootOptions
+function transformInstanceState(options: Module<any, any>) {
     const prototype = Object.getPrototypeOf(options)
     const stateProps = getStates(prototype)
     stateProps.forEach(propertyKey => {
@@ -144,13 +120,7 @@ function transformInstanceState(
     })
 }
 
-function transformInstanceModels(
-    rootOptions: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    const options = namespace
-        ? getOptions(rootOptions, namespace.split('/'))
-        : rootOptions
+function transformInstanceModels(options: Module<any, any>) {
     const prototype = Object.getPrototypeOf(options)
     getModels(prototype).forEach(
         ({ key, action, actionName, mutationName }) => {
@@ -171,16 +141,13 @@ function transformInstanceModels(
     )
 }
 
-function transformInstanceProps(
-    options: Module<any, any>,
-    namespace: string | undefined = undefined
-) {
-    transformInstanceState(options, namespace)
-    transformInstanceGetters(options, namespace)
-    transformInstanceActions(options, namespace)
-    transformInstanceMutations(options, namespace)
-    transformInstanceGetSets(options, namespace)
-    transformInstanceModels(options, namespace)
+function transformInstanceProps(options: Module<any, any>, path?: string[]) {
+    transformInstanceState(options)
+    transformInstanceGetters(options, path)
+    transformInstanceActions(options, path)
+    transformInstanceMutations(options)
+    transformInstanceGetSets(options)
+    transformInstanceModels(options)
 }
 
 const getOptions = (options: Module<any, any>, path: string[]) => {
@@ -213,93 +180,12 @@ const getNamespaceParent = (
     return [rootOptions, undefined]
 }
 
-function transformModuleMethods(
-    options: Module<any, any>,
-    path: string[] | null
-) {
-    if (!path) {
-        if (options.modules) {
-            Object.keys(options.modules).forEach(key => {
-                transformModuleMethods(options, [key])
-            })
-        }
-
-        return
-    }
-
-    const targetOptions = getOptions(options, path)
-    const ns = path.join('/')
-    transformInstanceProps(options, ns)
-
-    if (targetOptions.modules) {
-        Object.keys(targetOptions.modules).forEach(key => {
-            transformModuleMethods(options, [...path, key])
+function transformModuleMethods(options: Module<any, any>, path?: string[]) {
+    transformInstanceProps(options, path)
+    if (options.modules) {
+        Object.entries(options.modules).forEach(([key, value]) => {
+            transformModuleMethods(value, [...(path || []), key])
         })
-    }
-}
-
-function transformInstanceMethods(options: Module<any, any>) {
-    transformInstanceProps(options)
-    transformModuleMethods(options, null)
-}
-
-export function classModule<S extends {} = any>(ctor: {
-    new (options: StoreOptions<S>): Store<S>
-}) {
-    return class extends ctor {
-        constructor(options: StoreOptions<S>) {
-            super(options)
-            const anyOptions = options as any
-            if (
-                !anyOptions.constructor ||
-                typeof anyOptions.constructor !== 'function' ||
-                !anyOptions.constructor.prototype
-            ) {
-                throw new Error('The options supplied to classModule ')
-            }
-            setStoreOptionMetadata(this, options)
-        }
-
-        registerModule<T>(
-            path: string,
-            module: Module<T, S>,
-            options?: ModuleOptions | undefined
-        ): void
-        registerModule<T>(
-            path: string[],
-            module: Module<T, S>,
-            options?: ModuleOptions | undefined
-        ): void
-        registerModule<T>(
-            path: string | string[],
-            module: Module<T, S>,
-            options?: ModuleOptions | undefined
-        ) {
-            transformInstanceMethods(module)
-            setInstanceMetadata(
-                this,
-                module,
-                typeof path === 'string' ? path : path.join('/')
-            )
-            if (typeof path === 'string') {
-                super.registerModule(path, module, options)
-            } else {
-                super.registerModule(path, module, options)
-            }
-        }
-        unregisterModule(path: string): void
-        unregisterModule(path: string[]): void
-        unregisterModule(path: string | string[]) {
-            removeInstanceMetadata(
-                this,
-                typeof path === 'string' ? path : path.join('/')
-            )
-            if (typeof path === 'string') {
-                super.unregisterModule(path)
-            } else {
-                super.unregisterModule(path)
-            }
-        }
     }
 }
 
@@ -337,11 +223,37 @@ export function createStore<S extends {}, T extends S>(
     ctor: T | ModuleCtor<T> | (() => T),
     ...args: any[]
 ): Store<S> {
-    const superClass = classModule(Store)
     const options = isNewable(ctor) ? new ctor(...args) : ctor
     const storeOptions = createClassModule(options) as StoreOptions<S>
-    transformInstanceMethods(storeOptions)
-    return (_store = new superClass(storeOptions))
+    transformModuleMethods(storeOptions)
+    const store = (_store = new Store(storeOptions))
+    setStoreOptionMetadata(store, storeOptions)
+
+    const _registerModule = store.registerModule
+    store.registerModule = function(
+        this: Store<any>,
+        path: string | string[],
+        module: Module<any, any>,
+        options?: ModuleOptions
+    ) {
+        transformModuleMethods(module, Array.isArray(path) ? path : [path])
+        const instancePath = Array.isArray(path) ? path.join('/') : path
+        setInstanceMetadata(this, module, instancePath)
+        // cast because overloaded method doesn't accept union type
+        _registerModule.call(this, path as string[], module, options)
+    }.bind(store)
+    const _unregisterModule = store.unregisterModule
+    store.unregisterModule = function(
+        this: Store<any>,
+        path: string | string[]
+    ) {
+        removeInstanceMetadata(
+            this,
+            typeof path === 'string' ? path : path.join('/')
+        )
+        _unregisterModule.call(this, path as string[])
+    }.bind(store)
+    return store
 }
 
 const getState = <S>(

@@ -1,5 +1,5 @@
 import './_init'
-import { getset, createStore, getModule, action } from '../src'
+import { getset, createStore, getModule, action } from '../dist'
 import { Store } from 'vuex'
 
 interface TestState {

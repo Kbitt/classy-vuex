@@ -1,5 +1,5 @@
 import { Test, TestState } from './getter.test'
-import { getset, getter, createStore, getModule } from '../src'
+import { getset, getter, createStore, getModule } from '../dist'
 import { Store } from 'vuex'
 
 interface InheritedTestState extends TestState {
@@ -12,6 +12,7 @@ class InheritedTest extends Test implements InheritedTestState {
 
     @getter
     get iv() {
+        console.log('get iv, ctor name = ' + (this as any).constructor.name)
         return this.inheritedValue
     }
 }

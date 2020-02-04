@@ -2,7 +2,7 @@
     "extends": "../tsconfig.json",
     "include": [
         "./*.ts",
-        "../src/*.ts",
+        "../dist/*.ts",
         "./*.vue",
         "helpers/helpers.types.ts",
         "helpers/helpers.test.ts"

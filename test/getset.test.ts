@@ -1,6 +1,6 @@
 import { getStore, TestState, Test } from './_init'
 import { Store } from 'vuex'
-import { getModule } from '../src'
+import { getModule } from '../dist'
 
 describe('getset.ts', () => {
     let store: Store<TestState>

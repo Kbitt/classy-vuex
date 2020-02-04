@@ -15,7 +15,7 @@
 </template>
 <script lang="ts">
 import Vue from 'vue'
-import { mapComputed, mapMethods } from '../../src'
+import { mapComputed, mapMethods } from '../../dist'
 import { Test } from './helpers.types'
 export default Vue.extend({
     computed: mapComputed(Test),

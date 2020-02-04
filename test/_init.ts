@@ -1,7 +1,12 @@
 import Vue from 'vue'
 import Vuex, { Store } from 'vuex'
-import ClassyVuex from '../src'
-import { state, mutation, action, createStore, getset } from '../src'
+import ClassyVuex, {
+    state,
+    mutation,
+    action,
+    createStore,
+    getset,
+} from '../dist'
 Vue.config.productionTip = false
 Vue.config.devtools = false
 Vue.use(Vuex)

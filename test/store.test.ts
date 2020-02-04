@@ -6,12 +6,11 @@ import {
     registerModule,
     isRegistered,
     unregisterModule,
-} from '../src/store'
-import { getter } from '../src/getter'
-import { getStoreFromOptions, getOptionsFromStore } from '../src/reflect'
-import { mutation } from '../src/mutation'
-import { state } from '../src/state'
-import { getset } from '../src'
+} from '../dist'
+import { getter } from '../dist'
+import { mutation } from '../dist'
+import { state } from '../dist'
+import { getset } from '../dist'
 
 interface TestState {
     value: number
@@ -73,18 +72,6 @@ describe('state.ts', () => {
     beforeEach(() => {
         options = new Test()
         store = createStore(options)
-    })
-    test('get store from metadata', () => {
-        const optionsAgain = getOptionsFromStore(store)
-
-        expect(options === optionsAgain).toBe(true)
-    })
-
-    test('get options from metadata', () => {
-        const storeAgain = getStoreFromOptions(options)
-
-        expect(store === storeAgain).toBe(true)
-        expect(storeAgain instanceof Store).toBe(true)
     })
 
     test('use store reference', () => {

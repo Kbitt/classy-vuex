@@ -1,6 +1,6 @@
 import './_init'
-import { action, createStore, getset, getModule } from '../src'
-import { model } from '../src/model'
+import { action, createStore, getset, getModule } from '../dist'
+import { model } from '../dist'
 import { Store } from 'vuex'
 
 class Test {

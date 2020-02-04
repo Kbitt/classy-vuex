@@ -114,10 +114,18 @@ export function removeInstanceMetadata(store: Store<any>, namespace: string) {
 export function getInstanceMetadata(
     store: Store<any>
 ): Map<string, InstanceMetadata> {
-    return (
-        Reflect.getMetadata(OPTIONS_NS_TO_INSTANCE, store) ||
-        new Map<string, InstanceMetadata>()
-    )
+    try {
+        return (
+            Reflect.getMetadata(OPTIONS_NS_TO_INSTANCE, store) ||
+            new Map<string, InstanceMetadata>()
+        )
+    } catch (e) {
+        throw new Error(
+            `Error getting instance metadata` +
+                (!store ? ' store is undefined' : '') +
+                `. Inner = ${JSON.stringify(e)}`
+        )
+    }
 }
 
 export function getReverseInstanceMetadata(
@@ -195,32 +203,6 @@ function useDescriptor<T>(
             `Could not obtain property descriptor for key: ${propertyKey}`
         )
     return cb(descriptor)
-}
-
-export function isGetter(target: any, propertyKey: string) {
-    return useDescriptor(target, propertyKey, prop => !!prop.get)
-}
-
-export function isSetter(target: any, propertyKey: string) {
-    return useDescriptor(target, propertyKey, prop => !!prop.set)
-}
-
-export const createProxy = <T extends {}>(
-    input: T,
-    exclude: string[] | undefined = undefined
-) => {
-    const result: any = {}
-
-    const keys = Object.keys(input) as (keyof T)[]
-
-    keys.forEach(key => {
-        if (exclude && exclude.length && exclude.includes(key as string)) return
-        Object.defineProperty(result, key, {
-            get: () => input[key],
-            set: value => (input[key] = value),
-        })
-    })
-    return result as T
 }
 
 export function isNewable(

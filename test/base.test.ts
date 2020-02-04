@@ -1,5 +1,5 @@
 import './_init'
-import { getset, createStore, action, getModule } from '../src'
+import { getset, createStore, action, getModule } from '../dist'
 import { Store } from 'vuex'
 
 class B {

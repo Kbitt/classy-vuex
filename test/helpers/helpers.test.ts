@@ -1,8 +1,8 @@
 /// <reference types="../shims-vue" />
-import ClassyVuex from '../../src'
-import { createStore } from '../../src'
+import ClassyVuex from '../../dist'
+import { createStore } from '../../dist'
 import Vuex, { Store } from 'vuex'
-import { mapComputed, VueComputed, mapMethods } from '../../src/helpers'
+import { mapComputed, VueComputed, mapMethods } from '../../dist'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'
 import { TestState, Test, SubTest } from './helpers.types'

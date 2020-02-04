@@ -1,7 +1,6 @@
 import './_init'
-import { getset, createStore, getModule } from '../src'
-import { Module, Store } from 'vuex'
-import { getInstanceMetadata } from '../src/reflect'
+import { getset, createStore, getModule } from '../dist'
+import { Store } from 'vuex'
 
 interface AState {
     a: string
@@ -44,13 +43,6 @@ describe('test nested namespaced modules', () => {
     let store: Store<AState>
     beforeEach(() => {
         store = createStore(A)
-    })
-
-    it('check metadata', () => {
-        const metadata = getInstanceMetadata(store)
-        const keys = [...metadata.keys()]
-        expect(keys).toContain('b')
-        expect(keys).toContain('b/c')
     })
 
     it('check first nested namespace', () => {

@@ -8,7 +8,6 @@ export * from './model'
 import { ModuleCtor, getModule } from './store'
 export {
     getModule,
-    classModule,
     createStore,
     registerModule,
     unregisterModule,

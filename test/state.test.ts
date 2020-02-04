@@ -1,7 +1,7 @@
 import './_init'
-import { state } from '../src/state'
+import { state } from '../dist'
 import { Store } from 'vuex'
-import { createStore } from '../src'
+import { createStore } from '../dist'
 const I_VAL = 123
 const C_VAL = 0
 const T_VAL = 'fooooo!!!!'

@@ -1,10 +1,14 @@
 import './_init'
-import { mutation } from '../src/mutation'
 import { Store, Module } from 'vuex'
-import { action } from '../src/action'
-import { getter } from '../src/getter'
-import { createStore, getModule, getset } from '../src'
-import { state } from '../src/state'
+import {
+    createStore,
+    getModule,
+    getset,
+    mutation,
+    action,
+    getter,
+    state,
+} from '../dist'
 import { wait } from './_init'
 
 export interface TestState {

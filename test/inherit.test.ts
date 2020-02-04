@@ -1,7 +1,13 @@
 import './_init'
 import { Store, StoreOptions } from 'vuex'
-import { mutation, getModule, getter, action, createStore } from '../src'
-import { state } from '../src/state'
+import {
+    mutation,
+    getModule,
+    getter,
+    action,
+    createStore,
+    state,
+} from '../dist'
 
 interface BaseModuleState {
     a: string

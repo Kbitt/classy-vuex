@@ -1,8 +1,8 @@
 import './_init'
-import { mutation, getMutations } from '../src/mutation'
+import { mutation, getMutations } from '../dist'
 import { Store } from 'vuex'
-import { state } from '../src/state'
-import { createStore, getModule } from '../src'
+import { state } from '../dist'
+import { createStore, getModule } from '../dist'
 
 interface TestState {
     value: number

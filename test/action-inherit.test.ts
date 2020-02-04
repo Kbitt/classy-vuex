@@ -1,5 +1,5 @@
 import { Test, TestState } from './action.test'
-import { getset, action, createStore, getModule } from '../src'
+import { getset, action, createStore, getModule } from '../dist'
 import { Store } from 'vuex'
 
 interface InheritedTestState extends TestState {
