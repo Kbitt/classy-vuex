@@ -1,5 +1,12 @@
 import './_init'
-import { getset, createStore, getModule } from '../dist'
+import {
+    getset,
+    createStore,
+    getModule,
+    isRegistered,
+    registerModule,
+    unregisterModule,
+} from '../dist'
 import { Store } from 'vuex'
 
 class Root {}
@@ -96,5 +103,31 @@ describe('the test', () => {
         const sup2 = getModule(Object, 'super2') as InheritedDynamicTest
         expect(sup2.value).toBe('value')
         expect(sup2.superValue).toBe('superValue')
+    })
+
+    it('isRegistered', () => {
+        expect(isRegistered('super')).toBe(false)
+        store.registerModule('super', new InheritedDynamicTest() as any)
+        expect(isRegistered('super')).toBe(true)
+        store.unregisterModule('super')
+        expect(isRegistered('super')).toBe(false)
+    })
+
+    it('isRegistered2', () => {
+        expect(isRegistered('super')).toBe(false)
+        registerModule('super', new InheritedDynamicTest() as any)
+        expect(isRegistered('super')).toBe(true)
+        unregisterModule('super')
+        expect(isRegistered('super')).toBe(false)
+    })
+
+    it('isRegistered nested', () => {
+        registerModule('super', new InheritedDynamicTest() as any)
+        registerModule(['super', 'super'], new InheritedDynamicTest() as any)
+
+        expect(isRegistered('super/super')).toBe(true)
+
+        const module = getModule(InheritedDynamicTest, 'super/super')
+        expect(module.value).toBe('value')
     })
 })

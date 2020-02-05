@@ -54,7 +54,8 @@ const STORE_OPTIONS = Symbol('STORE_OPTIONS')
 const OPTIONS_STORE = Symbol('OPTIONS_STORE')
 
 const MODULE = Symbol('MODULE')
-const MODULE_KEY = Symbol('MODULE_KEY')
+const MODULE_KEY_MAP = Symbol('MODULE_KEY_MAP')
+const MODULE_KEY_LIST = Symbol('MODULE_KEY_LIST')
 
 export function recordModule(target: any) {
     target.namespaced = true
@@ -62,11 +63,18 @@ export function recordModule(target: any) {
 }
 
 export function recordVuexKey(target: any, key: string) {
-    addToMetadataMap(MODULE_KEY, target, key, key)
+    addToMetadataMap(MODULE_KEY_MAP, target, key, key)
+    addToMetadataCollection(MODULE_KEY_LIST, target, key)
 }
 
 export function getVuexKeyMap(target: any): Map<string, string> {
-    return Reflect.getMetadata(MODULE_KEY, target) || new Map<string, string>()
+    return (
+        Reflect.getMetadata(MODULE_KEY_MAP, target) || new Map<string, string>()
+    )
+}
+
+export function getVuexKeyList(target: any): string[] {
+    return Reflect.getMetadata(MODULE_KEY_LIST, target) || []
 }
 
 export function isModule(target: any) {

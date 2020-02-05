@@ -9,6 +9,11 @@ interface TestState {
 }
 
 class Test implements TestState {
+    constructor(
+        private options: {
+            value: number
+        }
+    ) {}
     @state
     value = 0
 
@@ -24,13 +29,21 @@ class Test implements TestState {
 
     @mutation
     log() {}
+
+    @mutation
+    setToValue() {
+        this.value = this.options.value
+    }
 }
+
+const VALUE = 123123
+const OPTIONS = { value: VALUE }
 
 describe('mutation.ts', () => {
     let store: Store<TestState>
     let mod: Test
     beforeEach(() => {
-        store = createStore(Test)
+        store = createStore(Test, OPTIONS)
         mod = getModule(Test)
     })
 
@@ -47,8 +60,8 @@ describe('mutation.ts', () => {
     })
 
     test('mutations get recorded', () => {
-        const mutations = getMutations(new Test())
-        expect(mutations.length).toBe(3)
+        const mutations = getMutations(new Test(OPTIONS))
+        expect(mutations.length).toBe(4)
     })
 
     test('accessing another mutation from a mutation fails', () => {
@@ -60,5 +73,10 @@ describe('mutation.ts', () => {
             succeeded = false
         }
         expect(succeeded).toBe(false)
+    })
+
+    it('use instance values', () => {
+        mod.setToValue()
+        expect(mod.value).toBe(VALUE)
     })
 })

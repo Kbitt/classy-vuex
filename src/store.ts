@@ -16,7 +16,7 @@ import { getStates } from './state'
 import { getGetSets } from './getset'
 import { debounce } from 'lodash-es'
 import { getModels } from './model'
-import { defineMutation, defineState } from './define'
+import { defineMutation, defineState, defineInstanceMutation } from './define'
 import { getVirtuals } from './virtual'
 export type ModuleCtor<T> = {
     new (...args: any[]): T
@@ -93,10 +93,16 @@ function transformInstanceGetters(options: Module<any, any>, path?: string[]) {
     })
 }
 
-function transformInstanceMutations(targetOptions: Module<any, any>) {
-    const prototype = Object.getPrototypeOf(targetOptions)
+function transformInstanceMutations(
+    options: Module<any, any>,
+    path?: string[]
+) {
+    const prototype = Object.getPrototypeOf(options)
+    const namespace = path ? path.join('/') : undefined
     getMutations(prototype).forEach(key => {
-        defineMutation(targetOptions, key)
+        defineInstanceMutation(options, key, () =>
+            getInstance(prototype, namespace)
+        )
     })
 }
 
@@ -145,7 +151,7 @@ function transformInstanceProps(options: Module<any, any>, path?: string[]) {
     transformInstanceState(options)
     transformInstanceGetters(options, path)
     transformInstanceActions(options, path)
-    transformInstanceMutations(options)
+    transformInstanceMutations(options, path)
     transformInstanceGetSets(options)
     transformInstanceModels(options)
 }

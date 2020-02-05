@@ -281,3 +281,7 @@ Similar to `mapComputed` but for uses of the `action` and `mutation` decorators.
 -   Constructor arguments and instance properties and methods are supported inside actions. Module instances are maintained for the lifetime of the store. However it is not recommended to make significant use of instance properties or methods not marked with `classy-vuex` decorators.
 -   While mutations/getters do not run with a true `this` argument of the class instance, they can still access static class properties/methods (accessed by name, not by `this`) or other non-class variables or functions.
 -   Vuex is intended to be used with singleton stores and multiple modules to segment functionality, and `classy-vuex` relies on this fact. When `createStore` is called, the store instance that is returned is cached and stored in metadata for internal use.
+
+## Change log
+
+-   **1.8.1** - Added support for methods decorated with `@mutation` to access instance properties and undecorated methods (but no actions/getters)
