@@ -7,7 +7,7 @@ import {
     registerModule,
     unregisterModule,
 } from '../dist'
-import { Store } from 'vuex'
+import { Store, Module } from 'vuex'
 
 class Root {}
 
@@ -129,5 +129,43 @@ describe('the test', () => {
 
         const module = getModule(InheritedDynamicTest, 'super/super')
         expect(module.value).toBe('value')
+    })
+
+    it('test regular module', async () => {
+        type UseValue = { value: string }
+
+        registerModule('special', {
+            namespaced: true,
+            state: () => ({
+                value: '',
+            }),
+            mutations: {
+                setValue: (state, { value }: UseValue) => {
+                    state.value = value
+                },
+            },
+            actions: {
+                setValue: ({ commit }, { value }: UseValue) => {
+                    commit('setValue', { value })
+                    return Promise.resolve()
+                },
+            },
+            getters: {
+                getValue: () => 'value',
+            },
+        } as Module<UseValue, any>)
+
+        let anyStore = store as Store<any>
+
+        expect(anyStore.state.special.value).toBe('')
+        anyStore.commit('special/setValue', { value: 'abc' })
+        expect(anyStore.state.special.value).toBe('abc')
+        await anyStore.dispatch('special/setValue', { value: 'xyz' })
+        expect(anyStore.state.special.value).toBe('xyz')
+        const getValue = anyStore.getters['special/getValue']
+        await anyStore.dispatch('special/setValue', { value: getValue })
+        expect(anyStore.state.special.value).toBe(getValue)
+        unregisterModule('special')
+        expect(!anyStore.state.special).toBe(true)
     })
 })

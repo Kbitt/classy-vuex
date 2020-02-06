@@ -7,6 +7,7 @@ import { getGetterKeys } from './getter'
 import { getGetSetKeys } from './getset'
 import { Accessors } from 'vue/types/options'
 import { getModelKeys } from './model'
+import { Module } from 'vuex'
 
 export type VueComputed = Accessors<{ [key: string]: any }>
 
@@ -126,4 +127,55 @@ export function mapMethods<T>(
         }
     })
     return result
+}
+
+function mergeFunctions(
+    target: Module<any, any>,
+    source: Module<any, any>,
+    type: 'actions' | 'mutations' | 'getters'
+) {
+    if (!source[type]) return
+    const targetValue = target[type]
+    target[type] = {
+        ...targetValue,
+        ...(source[type] || {}),
+    } as any
+}
+
+export type MergeModuleOptions = {
+    /** Control whether or not to merge sub modules (default: false) */
+    modules?: boolean
+}
+const typeKeys = ['actions', 'mutations', 'getters'] as const
+/** Merge the source module into the target. The target is expected to be a vuex module, either a normal vuex module or one transformed by classy-vuex decorators */
+export function mergeModule(
+    target: any,
+    source: Module<any, any>,
+    options: MergeModuleOptions = {}
+) {
+    const targetModule = target as Module<any, any>
+    if (source.state) {
+        const targetState = targetModule.state
+        targetModule.state = () => ({
+            ...(typeof targetState === 'function'
+                ? targetState()
+                : targetState || {}),
+            ...(typeof source.state === 'function'
+                ? source.state()
+                : source.state),
+        })
+    }
+
+    if (source.modules && options.modules) {
+        targetModule.modules = {
+            ...(targetModule.modules || {}),
+            ...source.modules,
+        }
+    }
+
+    typeKeys.forEach(key => {
+        mergeFunctions(targetModule, source, key)
+    })
+
+    return targetModule
 }

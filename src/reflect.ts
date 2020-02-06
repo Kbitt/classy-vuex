@@ -119,6 +119,10 @@ export function removeInstanceMetadata(store: Store<any>, namespace: string) {
     removeFromMetadataMap(OPTIONS_INSTANCE_TO_NS, store, options)
 }
 
+export function hasInstanceMetadata(store: Store<any>, namespace: string) {
+    return getInstanceMetadata(store).has(namespace)
+}
+
 export function getInstanceMetadata(
     store: Store<any>
 ): Map<string, InstanceMetadata> {

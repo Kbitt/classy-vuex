@@ -1,8 +1,12 @@
 /// <reference types="../shims-vue" />
-import ClassyVuex from '../../dist'
-import { createStore } from '../../dist'
+import ClassyVuex, {
+    createStore,
+    mapComputed,
+    VueComputed,
+    mapMethods,
+    mergeModule,
+} from '../../dist'
 import Vuex, { Store } from 'vuex'
-import { mapComputed, VueComputed, mapMethods } from '../../dist'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'
 import { TestState, Test, SubTest } from './helpers.types'
@@ -167,5 +171,46 @@ describe('helpers.ts', () => {
         const btn = wrapper.find('#btn3')
         btn.trigger('click')
         expect(store.state.filterActionCalled).toBe(true)
+    })
+
+    it('mergeModule', async () => {
+        const merged = mergeModule(new SubTest(), {
+            state: {
+                count: 0,
+            },
+            mutations: {
+                inc: state => state.count++,
+                setCount: (state, { count }: { count: number }) => {
+                    state.count = count
+                },
+            },
+            actions: {
+                foo: ({ commit }) => {
+                    commit('inc')
+                    return Promise.resolve()
+                },
+                toOne: ({ commit, getters }) => {
+                    commit('setCount', { count: getters.getOne })
+                    return Promise.resolve()
+                },
+            },
+            getters: {
+                getOne: () => 1,
+            },
+        })
+        store.registerModule('merged', merged)
+
+        expect((store.state as any).merged.count).toBe(0)
+        store.commit('merged/inc')
+        expect((store.state as any).merged.count).toBe(1)
+        await store.dispatch('merged/foo')
+        expect((store.state as any).merged.count).toBe(2)
+        store.commit('merged/setCount', { count: 21 })
+        expect((store.state as any).merged.count).toBe(21)
+        await store.dispatch('merged/toOne')
+        expect((store.state as any).merged.count).toBe(1)
+
+        store.unregisterModule('merged')
+        expect(!(store.state as any).merged).toBe(true)
     })
 })

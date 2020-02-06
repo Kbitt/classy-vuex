@@ -8,6 +8,7 @@ import {
     getReverseInstanceMetadata,
     setInstanceMetadata,
     removeInstanceMetadata,
+    hasInstanceMetadata,
 } from './reflect'
 import { getGetters } from './getter'
 import { getMutations } from './mutation'
@@ -242,9 +243,11 @@ export function createStore<S extends {}, T extends S>(
         module: Module<any, any>,
         options?: ModuleOptions
     ) {
-        transformModuleMethods(module, Array.isArray(path) ? path : [path])
-        const instancePath = Array.isArray(path) ? path.join('/') : path
-        setInstanceMetadata(this, module, instancePath)
+        if ((module as object).constructor !== Object) {
+            transformModuleMethods(module, Array.isArray(path) ? path : [path])
+            const instancePath = Array.isArray(path) ? path.join('/') : path
+            setInstanceMetadata(this, module, instancePath)
+        }
         // cast because overloaded method doesn't accept union type
         _registerModule.call(this, path as string[], module, options)
     }.bind(store)
@@ -253,10 +256,9 @@ export function createStore<S extends {}, T extends S>(
         this: Store<any>,
         path: string | string[]
     ) {
-        removeInstanceMetadata(
-            this,
-            typeof path === 'string' ? path : path.join('/')
-        )
+        const namespace = typeof path === 'string' ? path : path.join('/')
+        if (hasInstanceMetadata(this, namespace))
+            removeInstanceMetadata(this, namespace)
         _unregisterModule.call(this, path as string[])
     }.bind(store)
     return store
