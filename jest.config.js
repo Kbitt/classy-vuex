@@ -12,4 +12,9 @@ module.exports = {
         // tell Jest to handle `*.vue` files
         'vue',
     ],
+    globals: {
+        'ts-jest': {
+            babelConfig: true,
+        },
+    },
 }
