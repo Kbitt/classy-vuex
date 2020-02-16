@@ -119,7 +119,7 @@ export default class Todos {
 }
 ```
 
-A store can then be created as such (required for modules to work correctly):
+A store can then be created with the `createStore` function. This creates a new instance of `Vuex.Store` and setups up the required metadata. **NOTE: DO NOT CALL `new Store(...)` directly, decorated modules will not work correctly.**
 
 ```typescript
 export const store = createStore(Todos)
@@ -181,11 +181,11 @@ export default {
 }
 ```
 
-Register modules dynamically
+Register modules dynamically. Note: **DO NOT CALL store.registerModule or store.unregisterModule directly,** for decorated module class instances, as the required metadata will not be setup or torn down correctly.
 
 ```typescript
-store.registerModule('myModule', new MyModule() as any) // may need to cast to any, since class module won't satisfy the vuex Module interface
-// or
+import { registerModule } from 'classy-vuex'
+
 registerModule('myModule', new MyModule()) // accepts any for input module
 
 // works
@@ -281,9 +281,11 @@ Similar to `mapComputed` but for uses of the `action` and `mutation` decorators.
 -   Constructor arguments and instance properties and methods are supported inside actions. Module instances are maintained for the lifetime of the store. However it is not recommended to make significant use of instance properties or methods not marked with `classy-vuex` decorators.
 -   While mutations/getters do not run with a true `this` argument of the class instance, they can still access static class properties/methods (accessed by name, not by `this`) or other non-class variables or functions.
 -   Vuex is intended to be used with singleton stores and multiple modules to segment functionality, and `classy-vuex` relies on this fact. When `createStore` is called, the store instance that is returned is cached and stored in metadata for internal use.
+-   **Why not subclass Store?** Earlier iterations of `classy-vuex` experimented with subclassing `Vuex.Store` in order to maintain the same syntax of creating a store as `vuex`. However, subclassing `Store` introduces some issues at runtime that cannot be caught by unit tests. The `vuex` support of the vue devtools browser extension completely breaks if `Store` is subclassed. The `registerModule` and `unregisterStore` methods also do not work correctly if they are overrided or otherwise replaced. Instead the exported functions `createStore`, `registerModule` and `unregisterModule` allow for the `Store` to be created and modified withtout extending the `Store` class.
 
 ## Change log
 
+-   **1.8.5** - Remove replacement of `store.registerModule` and `store.unregisterModule` as these did not work correctly in real applications. Use the exported functions instead.
 -   **1.8.3** - The build system was altered. Formerly, the typescript declarations may have exposed some objects that may not have actually been available in javascript. Now the output javascript and typescript are consistent.
 -   **1.8.2** - Add `mergeModule` function, for merging module options together. Added better handling of dynamic registration/unregistration of plain modules.
 -   **1.8.1** - Added support for methods decorated with `@mutation` to access instance properties and undecorated methods (but no actions/getters)

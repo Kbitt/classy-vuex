@@ -49,41 +49,41 @@ describe('the test', () => {
     })
 
     it('test basic', () => {
-        store.registerModule('dyn', new DynamicTest() as any)
+        registerModule('dyn', new DynamicTest() as any)
         expect(store.state.dyn.value).toBe('value')
     })
 
     it('test basic w/ module', () => {
-        store.registerModule('dyn', new DynamicTest() as any)
+        registerModule('dyn', new DynamicTest() as any)
         const dyn = getModule(DynamicTest, 'dyn')
         expect(dyn.value).toBe('value')
     })
 
     it('test super', () => {
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
         expect(store.state.super.value).toBe('value')
         expect(store.state.super.superValue).toBe('superValue')
     })
 
     it('test super w/ module', () => {
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
         const sup = getModule(InheritedDynamicTest, 'super')
         expect(sup.value).toBe('value')
         expect(sup.superValue).toBe('superValue')
     })
 
     it('test both', () => {
-        store.registerModule('dyn', new DynamicTest() as any)
+        registerModule('dyn', new DynamicTest() as any)
         expect(store.state.dyn.value).toBe('value')
 
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
         expect(store.state.super.value).toBe('value')
         expect(store.state.super.superValue).toBe('superValue')
     })
 
     it('test both w/ modules', () => {
-        store.registerModule('dyn', new DynamicTest() as any)
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('dyn', new DynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
 
         const dyn = getModule(DynamicTest, 'dyn')
         expect(dyn.value).toBe('value')
@@ -94,7 +94,7 @@ describe('the test', () => {
     })
 
     it('test using base class w/ dynamic registered module', () => {
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
 
         const dyn = getModule(DynamicTest, 'super')
         expect(dyn.value).toBe('value')
@@ -102,8 +102,8 @@ describe('the test', () => {
     })
 
     it('test using same class multiple times', () => {
-        store.registerModule('super', new InheritedDynamicTest() as any)
-        store.registerModule('super2', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super2', new InheritedDynamicTest() as any)
 
         const TEST_VALUE = 'xxx'
         const sup = getModule(Object, 'super') as InheritedDynamicTest
@@ -119,9 +119,9 @@ describe('the test', () => {
 
     it('isRegistered', () => {
         expect(isRegistered('super')).toBe(false)
-        store.registerModule('super', new InheritedDynamicTest() as any)
+        registerModule('super', new InheritedDynamicTest() as any)
         expect(isRegistered('super')).toBe(true)
-        store.unregisterModule('super')
+        unregisterModule('super')
         expect(isRegistered('super')).toBe(false)
     })
 

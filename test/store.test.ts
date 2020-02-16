@@ -92,7 +92,7 @@ describe('state.ts', () => {
     })
 
     test('dynamic registration', () => {
-        store.registerModule('foo2', new Unregistered() as any)
+        registerModule('foo2', new Unregistered() as any)
         expect((store.state as any).foo2.foo).toBe(INIT_FOO)
         const foo2 = getModule(Unregistered, 'foo2')
         expect(!foo2).toBe(false)

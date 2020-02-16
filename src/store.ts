@@ -201,11 +201,10 @@ export function isRegistered(namespace: string) {
 }
 
 export function unregisterModule(path: string | string[]) {
-    if (typeof path === 'string') {
-        _store.unregisterModule(path)
-    } else {
-        _store.unregisterModule(path)
-    }
+    const namespace = typeof path === 'string' ? path : path.join('/')
+    if (hasInstanceMetadata(_store, namespace))
+        removeInstanceMetadata(_store, namespace)
+    _store.unregisterModule(path as string[])
 }
 
 export function registerModule(
@@ -213,15 +212,13 @@ export function registerModule(
     module: any,
     options?: ModuleOptions | undefined
 ) {
-    if (typeof path === 'string') {
-        _store.registerModule(
-            typeof path === 'string' ? path : path,
-            module,
-            options
-        )
-    } else {
-        _store.registerModule(path, module, options)
+    const instancePath = Array.isArray(path) ? path.join('/') : path
+    if ((module as object).constructor !== Object) {
+        transformModuleMethods(module, Array.isArray(path) ? path : [path])
+        setInstanceMetadata(_store, module, instancePath)
     }
+    // cast because overloaded method doesn't accept union type
+    _store.registerModule(path as string[], module, options)
 }
 
 let _store: Store<any>
@@ -237,32 +234,6 @@ export function createStore<S extends {}, T extends S>(
     transformModuleMethods(storeOptions)
     const store = (_store = new Store(storeOptions))
     setStoreOptionMetadata(store, storeOptions)
-
-    const _registerModule = store.registerModule
-    store.registerModule = function(
-        this: Store<any>,
-        path: string | string[],
-        module: Module<any, any>,
-        options?: ModuleOptions
-    ) {
-        const instancePath = Array.isArray(path) ? path.join('/') : path
-        if ((module as object).constructor !== Object) {
-            transformModuleMethods(module, Array.isArray(path) ? path : [path])
-            setInstanceMetadata(this, module, instancePath)
-        }
-        // cast because overloaded method doesn't accept union type
-        _registerModule.call(this, path as string[], module, options)
-    }.bind(store)
-    const _unregisterModule = store.unregisterModule
-    store.unregisterModule = function(
-        this: Store<any>,
-        path: string | string[]
-    ) {
-        const namespace = typeof path === 'string' ? path : path.join('/')
-        if (hasInstanceMetadata(this, namespace))
-            removeInstanceMetadata(this, namespace)
-        _unregisterModule.call(this, path as string[])
-    }.bind(store)
     return store
 }
 

@@ -5,6 +5,8 @@ import ClassyVuex, {
     VueComputed,
     mapMethods,
     mergeModule,
+    registerModule,
+    unregisterModule,
 } from '../../src'
 import Vuex, { Store } from 'vuex'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
@@ -198,7 +200,7 @@ describe('helpers.ts', () => {
                 getOne: () => 1,
             },
         })
-        store.registerModule('merged', merged)
+        registerModule('merged', merged)
 
         expect((store.state as any).merged.count).toBe(0)
         store.commit('merged/inc')
@@ -210,7 +212,7 @@ describe('helpers.ts', () => {
         await store.dispatch('merged/toOne')
         expect((store.state as any).merged.count).toBe(1)
 
-        store.unregisterModule('merged')
+        unregisterModule('merged')
         expect(!(store.state as any).merged).toBe(true)
     })
 })

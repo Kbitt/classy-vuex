@@ -12,7 +12,6 @@ class InheritedTest extends Test implements InheritedTestState {
 
     @getter
     get iv() {
-        console.log('get iv, ctor name = ' + (this as any).constructor.name)
         return this.inheritedValue
     }
 }
