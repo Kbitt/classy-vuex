@@ -12,6 +12,7 @@ export {
     registerModule,
     unregisterModule,
     isRegistered,
+    getStore,
 } from './store'
 export * from './helpers'
 

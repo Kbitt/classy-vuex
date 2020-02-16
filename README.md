@@ -284,5 +284,6 @@ Similar to `mapComputed` but for uses of the `action` and `mutation` decorators.
 
 ## Change log
 
+-   **1.8.3** - The build system was altered. Formerly, the typescript declarations may have exposed some objects that may not have actually been available in javascript. Now the output javascript and typescript are consistent.
 -   **1.8.2** - Add `mergeModule` function, for merging module options together. Added better handling of dynamic registration/unregistration of plain modules.
 -   **1.8.1** - Added support for methods decorated with `@mutation` to access instance properties and undecorated methods (but no actions/getters)
