@@ -15,7 +15,7 @@ import { getMutations } from './mutation'
 import { getActions } from './action'
 import { getStates } from './state'
 import { getGetSets } from './getset'
-import { debounce } from 'lodash-es'
+import debounce from 'lodash.debounce'
 import { getModels } from './model'
 import { defineMutation, defineState, defineInstanceMutation } from './define'
 import { getVirtuals } from './virtual'
@@ -243,9 +243,9 @@ export function createStore<S extends {}, T extends S>(
         module: Module<any, any>,
         options?: ModuleOptions
     ) {
+        const instancePath = Array.isArray(path) ? path.join('/') : path
         if ((module as object).constructor !== Object) {
             transformModuleMethods(module, Array.isArray(path) ? path : [path])
-            const instancePath = Array.isArray(path) ? path.join('/') : path
             setInstanceMetadata(this, module, instancePath)
         }
         // cast because overloaded method doesn't accept union type

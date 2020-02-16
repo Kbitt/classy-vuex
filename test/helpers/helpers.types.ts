@@ -1,5 +1,5 @@
-import { state, getset, getter, mutation, action } from '../../dist'
-import { model } from '../../dist'
+import { state, getset, getter, mutation, action } from '../../src'
+import { model } from '../../src'
 
 export interface TestState {
     a: string

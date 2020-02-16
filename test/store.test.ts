@@ -6,11 +6,11 @@ import {
     registerModule,
     isRegistered,
     unregisterModule,
-} from '../dist'
-import { getter } from '../dist'
-import { mutation } from '../dist'
-import { state } from '../dist'
-import { getset } from '../dist'
+} from '../src'
+import { getter } from '../src'
+import { mutation } from '../src'
+import { state } from '../src'
+import { getset } from '../src'
 
 interface TestState {
     value: number

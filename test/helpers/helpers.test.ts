@@ -5,7 +5,7 @@ import ClassyVuex, {
     VueComputed,
     mapMethods,
     mergeModule,
-} from '../../dist'
+} from '../../src'
 import Vuex, { Store } from 'vuex'
 import { createLocalVue, shallowMount } from '@vue/test-utils'
 import Helper from './Helper.vue'

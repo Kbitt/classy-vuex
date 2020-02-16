@@ -6,7 +6,7 @@ import ClassyVuex, {
     action,
     createStore,
     getset,
-} from '../dist'
+} from '../src'
 Vue.config.productionTip = false
 Vue.config.devtools = false
 Vue.use(Vuex)

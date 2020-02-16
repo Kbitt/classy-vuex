@@ -1,5 +1,5 @@
 import './_init'
-import { getset, createStore, getModule } from '../dist'
+import { getset, createStore, getModule } from '../src'
 import { Store } from 'vuex'
 
 interface AState {

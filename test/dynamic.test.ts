@@ -6,10 +6,22 @@ import {
     isRegistered,
     registerModule,
     unregisterModule,
-} from '../dist'
+    mergeModule,
+} from '../src'
 import { Store, Module } from 'vuex'
 
-class Root {}
+class Root {
+    modules = {
+        a: new DynamicTest(),
+        b: new DynamicTest(),
+        c: mergeModule(new DynamicTest(), {
+            modules: {
+                abc: new InheritedDynamicTest() as any,
+            },
+        }),
+        d: new InheritedDynamicTest(),
+    }
+}
 
 interface DynamicTestState {
     value: string
@@ -167,5 +179,53 @@ describe('the test', () => {
         expect(anyStore.state.special.value).toBe(getValue)
         unregisterModule('special')
         expect(!anyStore.state.special).toBe(true)
+    })
+
+    const STATE = 'SOME_PROP',
+        INCREMENT = 'INCREMENT',
+        DECREMENT = 'DECREMENT'
+
+    it('use mergeModule', () => {
+        registerModule(
+            'final',
+            mergeModule(new InheritedDynamicTest(), {
+                state: () => ({
+                    [STATE]: 0,
+                }),
+                mutations: {
+                    [INCREMENT]: state => state[STATE]++,
+                    [DECREMENT]: state => state[STATE]--,
+                },
+            })
+        )
+
+        registerModule(
+            'final2',
+            mergeModule(new InheritedDynamicTest(), {
+                state: () => ({
+                    [STATE]: 0,
+                }),
+                mutations: {
+                    [INCREMENT]: state => state[STATE]++,
+                    [DECREMENT]: state => state[STATE]--,
+                },
+            })
+        )
+
+        expect(store.state.final[STATE]).toBe(0)
+        expect(store.state.final2[STATE]).toBe(0)
+
+        expect(isRegistered('final')).toBe(true)
+        expect(isRegistered('final2')).toBe(true)
+
+        expect(getModule(InheritedDynamicTest, 'final').value).toBe('value')
+        expect(getModule(InheritedDynamicTest, 'final2').value).toBe('value')
+
+        unregisterModule('final')
+
+        expect(isRegistered('final')).toBe(false)
+        expect(getModule(InheritedDynamicTest, 'final2').superValue).toBe(
+            'superValue'
+        )
     })
 })

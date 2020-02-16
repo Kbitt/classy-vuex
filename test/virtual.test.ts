@@ -9,7 +9,7 @@ import {
     virtual,
     action,
     getVirtuals,
-} from '../dist'
+} from '../src'
 import { Store } from 'vuex'
 interface FooState {
     _value: { text: string }

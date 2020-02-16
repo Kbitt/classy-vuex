@@ -1,8 +1,8 @@
 import './_init'
-import { getter, getGetters } from '../dist'
+import { getter, getGetters } from '../src'
 import { Store } from 'vuex'
-import { state } from '../dist'
-import { createStore, getModule, getset, action, model } from '../dist'
+import { state } from '../src'
+import { createStore, getModule, getset, action, model } from '../src'
 
 export interface TestState {
     value: number

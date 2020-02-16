@@ -8,7 +8,7 @@ import {
     action,
     getter,
     state,
-} from '../dist'
+} from '../src'
 import { wait } from './_init'
 
 export interface TestState {
