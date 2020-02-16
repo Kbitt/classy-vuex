@@ -226,6 +226,8 @@ export function registerModule(
 
 let _store: Store<any>
 
+export const getStore = () => _store
+
 export function createStore<S extends {}, T extends S>(
     ctor: T | ModuleCtor<T> | (() => T),
     ...args: any[]
@@ -315,16 +317,14 @@ function processModule(instance: any) {
     instance[IS_PROCESSED] = true
 
     const optionsPrototype = Object.getPrototypeOf(instance)
-    const _getStore = () =>
-        getStoreFromOptionsPrototype(optionsPrototype) ?? _store
     const _getNamespace = () => {
         const ns =
-            getReverseInstanceMetadata(_getStore()).get(instance)?.path ??
+            getReverseInstanceMetadata(getStore()).get(instance)?.path ??
             undefined
         return ns === ROOT_NS_KEY ? undefined : ns
     }
 
-    const _getState = () => getState(_getStore(), _getNamespace())
+    const _getState = () => getState(getStore(), _getNamespace())
     const _getPathedFn = (fn: string) => getPathedFn(fn, _getNamespace())
 
     const getSets = getGetSets(optionsPrototype)
@@ -334,7 +334,7 @@ function processModule(instance: any) {
             get: () => _getState()[gs.key],
             set: value => {
                 const type = _getPathedFn(gs.mutationName)
-                _getStore().commit(type, value)
+                getStore().commit(type, value)
             },
         })
     })
@@ -346,7 +346,7 @@ function processModule(instance: any) {
             configurable: true,
             get: () => _getState()[m.key],
             set: value =>
-                _getStore().dispatch(_getPathedFn(m.actionName), value),
+                getStore().dispatch(_getPathedFn(m.actionName), value),
         })
     })
 
@@ -363,14 +363,14 @@ function processModule(instance: any) {
 
     mutations.forEach(mutation => {
         instance[mutation] = (...args: any[]) =>
-            _getStore().commit(_getPathedFn(mutation), ...args)
+            getStore().commit(_getPathedFn(mutation), ...args)
     })
 
     const actions = getActions(optionsPrototype)
 
     actions.forEach(({ propertyKey: action }) => {
         instance[action] = (...args: any[]) => {
-            return _getStore().dispatch(_getPathedFn(action), ...args)
+            return getStore().dispatch(_getPathedFn(action), ...args)
         }
     })
 
@@ -381,10 +381,10 @@ function processModule(instance: any) {
         if (getter.isGetter) {
             Object.defineProperty(instance, getter.name, {
                 configurable: true,
-                get: () => _getStore().getters[path],
+                get: () => getStore().getters[path],
             })
         } else {
-            instance[getter.name] = () => _getStore().getters[path]
+            instance[getter.name] = () => getStore().getters[path]
         }
     })
 
@@ -395,7 +395,7 @@ function processModule(instance: any) {
             const setterPath = _getPathedFn(setterName)
             if (getters.some(gs => gs.name === getterName)) {
                 const path = _getPathedFn(getterName)
-                getter = () => _getStore().getters[path]
+                getter = () => getStore().getters[path]
             } else if (
                 stateKeys.includes(getterName) ||
                 getSets.some(gs => gs.key === getterName) ||
@@ -412,12 +412,12 @@ function processModule(instance: any) {
                 getSets.some(gs => gs.mutationName === setterName) ||
                 models.some(m => m.mutationName === setterName)
             ) {
-                setter = data => _getStore().commit(setterPath, data)
+                setter = data => getStore().commit(setterPath, data)
             } else if (
                 actions.some(a => a.propertyKey === setterName) ||
                 models.some(m => m.actionName === setterName)
             ) {
-                setter = data => _getStore().dispatch(setterPath, data)
+                setter = data => getStore().dispatch(setterPath, data)
             } else {
                 throw new Error(
                     `@virtual property was configured with setter name: ${setterName} which is not a defined action or mutation`
