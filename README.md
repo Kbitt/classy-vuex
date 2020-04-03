@@ -2,6 +2,8 @@
 
 `classy-vuex` is yet another package providing decorators that allow you to write vuex modules as type-safe classes.
 
+**This is an experimental library. There are variety of unit tests which validate that it works, and it has been tested in fairly complex applications, but some things may not work, such as the vue devtools browser plugin.**
+
 ## Setup
 
 `npm install --save classy-vuex` or `yarn add classy-vuex`
